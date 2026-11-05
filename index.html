@@ -139,6 +139,7 @@
       <div class="ts-item dream"><small>その先</small><b>900</b></div>
     </div>
     <p class="th-split">700点の目安：リスニング 360 ＋ リーディング 340</p>
+    <button class="th-next" type="button" id="thNext"></button>
   </div>
 
   <div class="card apply" id="applyCard">
@@ -151,7 +152,11 @@
     <a class="btn" href="https://www.iibc-global.org/toeic/test/lr/guide01/schedule.html" target="_blank" rel="noopener">公式の日程を見る ↗</a>
   </div>
 
-  <div class="section-title"><h2>700点までの道のり</h2><span id="phaseNow"></span></div>
+  <div class="section-title"><h2>この日までに、ここまで</h2><span id="msCount"></span></div>
+  <div class="ms-meter card"><div class="rm-bar"><i id="msBar"></i></div><span id="msLabel"></span></div>
+  <ol class="milestones" id="milestones"></ol>
+
+  <div class="section-title"><h2>毎日のペース</h2><span id="phaseNow"></span></div>
   <ol class="phases" id="phases"></ol>
 
   <div class="card toeic-stat">
@@ -217,10 +222,7 @@
   <div class="card"><ol class="ranks" id="ranks"></ol></div>
 
   <div class="section-title"><h2>気分が上がること</h2><span>迷ったら、ここから1つ</span></div>
-  <ul class="mood">
-    <li>ジム</li><li>ピアノ練習</li><li>勉強</li><li>難しい本を読む</li><li>部屋の掃除</li>
-    <li class="wide">パソコン作業<small>スタバなど外でやると尚よい</small></li>
-  </ul>
+  <ul class="mood" id="mood"></ul>
 
   <div class="section-title"><h2>私の続け方</h2><span>波があっても、道は続いている</span></div>
   <div class="card keep">
@@ -238,15 +240,7 @@
   </div>
 
   <div class="section-title"><h2>いつかやりたい棚</h2><span>約束じゃなくて、アイデア</span></div>
-  <ul class="shelf">
-    <li style="--c:var(--violet)">ゲームを完成させて誰かに遊んでもらう</li>
-    <li style="--c:var(--green-d)">イタリア語を検定まで</li>
-    <li style="--c:var(--blue)">ヨーロッパに数ヶ月滞在</li>
-    <li style="--c:var(--pink)">ワインの資格（ワインエキスパートなど）</li>
-    <li style="--c:var(--orange)">英検準1級</li>
-    <li style="--c:#c27be0">ピアノで仕上げた1曲を残せる形にする</li>
-    <li style="--c:var(--gold-d)">noteを続けて「この人の文章」と覚えてもらう</li>
-  </ul>
+  <ul class="shelf" id="shelf"></ul>
 
   <div class="section-title"><h2>これまでの記録</h2></div>
   <div class="card">
@@ -299,6 +293,7 @@
       <button class="btn green" type="button" id="doneBtn">できた！</button>
     </div>
     <div class="sheet-links">
+      <button type="button" id="toeicMsBtn" hidden>TOEICの目標に記録</button>
       <button type="button" id="planBtn">作戦を書きかえる</button>
       <button type="button" id="resetBtn">時間を0に戻す</button>
       <button type="button" id="delBtn">今日は外す</button>
@@ -327,6 +322,16 @@
     <input id="addInput" type="text" maxlength="30" placeholder="自分で書く（例：英単語）" aria-label="一手の名前">
     <button class="btn" type="submit">足す</button>
   </form>
+</section>
+
+<section class="sheet" id="infoSheet" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+  <div class="grab"></div>
+  <div class="sheet-head">
+    <span class="sheet-icon" id="infoIcon"></span>
+    <div class="sheet-headtext"><h3 id="infoTitle"></h3><p class="sheet-first" id="infoSub"></p></div>
+  </div>
+  <div class="info-body" id="infoBody"></div>
+  <div class="sheet-actions" id="infoActions"></div>
 </section>
 
 <section class="sheet" id="orderSheet" role="dialog" aria-modal="true" aria-labelledby="orderTitle">

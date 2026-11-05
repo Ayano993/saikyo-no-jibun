@@ -54,6 +54,18 @@
     'TOEIC': { icon: 'toeic', color: 'orange', min: 20, first: 'Part 5 を10問だけ解く',
       steps: ['Part 5 を20問（約10分）', '間違えた問題の解説を読む', '新しい単語を10個'] },
   };
+  Object.assign(PLANS, {
+    'ゲーム制作': { icon: 'pc', color: 'violet', min: 25, first: '今日つくる場面を1つ決める', steps: ['作る場面かバグを1つ決める', '25分だけ手を動かす', '動いたところを1行メモ'] },
+    'イタリア語': { icon: 'duo', color: 'green', min: 10, first: 'Duolingoでイタリア語を1レッスン', steps: ['Duolingoでイタリア語を1レッスン', '便りのイタリア語の見出しを1本読む', '覚えた単語を1つ声に出す'],
+      app: { label: 'Duolingoを開く', scheme: 'duolingo://', web: 'https://www.duolingo.com/learn' } },
+    '旅の下調べ': { icon: 'star', color: 'blue', min: 15, first: '行きたい街を1つ決める', steps: ['行きたい街を1つ決める', 'その街の写真と行き方を調べる', '「いつか行く」メモに足す'] },
+    'ワインの下調べ': { icon: 'book', color: 'pink', min: 15, first: 'ワインエキスパートの試験日を調べる', steps: ['試験日と申込期間を調べる', '必要な勉強の量を調べる', '始める時期を決める'] },
+    '英検': { icon: 'study', color: 'blue', min: 20, first: '英検準1級の試験日を調べる', steps: ['次の試験日と申込期間を調べる', '過去問を1セット眺める', '単語を10個'] },
+    '1曲仕上げ': { icon: 'piano', color: 'pink', min: 20, first: '仕上げたい1曲を決める', steps: ['仕上げたい1曲を決める', '難しい4小節だけ練習', 'スマホで1回録音してみる'] },
+    'note': { icon: 'study', color: 'gold', min: 25, first: '書きたいことを3行メモ', steps: ['書きたいことを3行メモ', '見出しを決めて下書き', '読み返して公開か保存'] },
+    'カラオケ練習': { icon: 'piano', color: 'green', min: 15, first: '十八番の1曲を決める', steps: ['十八番を1曲決める', '原曲を聴きながら一緒に歌う', '外しやすいところを3回'] },
+    'ヴァイオリン': { icon: 'piano', color: 'violet', min: 15, first: '弓を張って、開放弦を1分', steps: ['開放弦でまっすぐ弾く1分', '音階をゆっくり', '曲を少しずつ'] },
+  });
   const DEFAULT_PLAN = { icon: 'star', color: 'orange', min: 15, first: '15分だけ、手をつける', steps: ['タイマーを押す', '15分だけやる', '終わったら「できた！」'] };
 
   // ---------- 天才レベル ----------
@@ -91,6 +103,8 @@
     musicOff: ['音楽ストップ！ 集中モードだね！'],
     zouzei: ['ZOUZEI PHONK、いってらっしゃい！ リピートにして戻ってきてね！'],
     order: ['順番、決まった！ 上から順に、積んでいこう！'],
+    already: ['<b>{t}</b>は、もう今日の道にあるよ！ 丸を押してね'],
+    ms: ['<b>{t}</b>、達成！？ この日までに、ちゃんと積めてる…！'],
   };
   const pick1 = a => a[Math.floor(Math.random() * a.length)];
   const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => esc(v[k] ?? ''));
@@ -134,7 +148,12 @@
     return state.days[iso];
   };
   const planFor = label => {
-    const base = PLANS[label] || Object.entries(PLANS).find(([k]) => label.includes(k))?.[1] || DEFAULT_PLAN;
+    let base = PLANS[label] || Object.entries(PLANS).find(([k]) => label.includes(k))?.[1] || DEFAULT_PLAN;
+    if (base === PLANS.TOEIC && typeof PHASES !== 'undefined') {
+      const ph = PHASES.find(p => today >= p.from && today <= p.to) || PHASES[0];
+      const steps = ph.items.filter(x => !/申し?込/.test(x));
+      if (steps.length) base = { ...base, first: steps[0], steps };
+    }
     const own = state.plans[label];
     return own ? { ...base, ...own } : base;
   };
@@ -347,6 +366,7 @@
     $('#doneBtn').classList.toggle('green', !t.done);
     $('#sheetRow').classList.toggle('one', !p.app);
     $('#resetBtn').hidden = elapsedOf(t) < 1;
+    $('#toeicMsBtn').hidden = !/TOEIC/i.test(t.label);
     tickSheet();
     openSheet(sh);
     sfx('tap');
@@ -529,6 +549,10 @@
     renderToday();
     if (d.pick) { sfx('pick'); say('pick', { t: t.label }); }
   });
+  $('#toeicMsBtn').addEventListener('click', () => {
+    closeSheets(); go('goal');
+    setTimeout(() => $('#milestones').scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  });
   $('#resetBtn').addEventListener('click', () => {
     const t = sheetTask;
     if (running() && running().id === t.id) state.timer = null;
@@ -690,6 +714,31 @@
   $('#sfxToggle').addEventListener('change', e => { window.Sound.setSfx(e.target.checked); sfx('check'); });
   $('#volRange').addEventListener('input', e => window.Sound.setVol(e.target.value / 100));
 
+  // ---------- 詳しく見る・その場で登録 ----------
+  let infoActs = [];
+  const openInfo = ({ icon = ICON.star, color = 'orange', title, sub = '', body = '', actions = [] }) => {
+    const sh = $('#infoSheet');
+    sh.setAttribute('style', `--c:var(--${color});--cd:var(--${color}-d)`);
+    $('#infoIcon').innerHTML = icon;
+    $('#infoTitle').textContent = title;
+    $('#infoSub').textContent = sub;
+    $('#infoBody').innerHTML = body;
+    infoActs = actions;
+    $('#infoActions').innerHTML = actions.map((a, i) => `<button class="btn${a.ghost ? ' ghost' : ''}${a.green ? ' green' : ''}" type="button" data-i="${i}">${esc(a.label)}</button>`).join('');
+    openSheet(sh);
+    sfx('tap');
+  };
+  $('#infoActions').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) infoActs[+b.dataset.i].fn(); });
+  const hasToday = label => ensureDay(today).tasks.some(t => t.label === label);
+  const addToToday = label => {
+    if (hasToday(label)) { closeSheets(); go('today'); say('already', { t: label }); return; }
+    ensureDay(today).tasks.push({ id: uid(), label, done: false, secs: 0 });
+    save(); closeSheets(); go('today');
+    sfx('pick'); say('add', { t: label }, true);
+  };
+  const addAct = label => ({ label: hasToday(label) ? `「${label}」は今日の道にあります` : `今日の道に「${label}」を足す`, fn: () => addToToday(label) });
+  const stepsHtml = (steps, okCount = 0) => `<ol>${steps.map((x, i) => `<li${i < okCount ? ' class="ok"' : ''}><span>${i < okCount ? '✓' : i + 1}</span><span>${esc(x)}</span></li>`).join('')}</ol>`;
+
   // ---------- 記録の集計 ----------
   const timeByLabel = () => {
     const m = {};
@@ -718,19 +767,98 @@
     { title: '直前の仕上げ', from: '2027-01-18', to: '2027-01-23', items: ['本番と同じ時間帯に模試を1回', '新しいことはしない', '前の日は早く寝る'] },
     { title: '本番', from: '2027-01-24', to: '2027-01-24', items: ['いつもの朝ごはん', '受験票と写真付きの身分証', 'ここまで積んだ石を信じる'] },
   ];
+  // TOEIC：この日までに、ここまで
+  const OFFICIAL = 'https://www.iibc-global.org/toeic/test/lr/guide01/schedule.html';
+  const MILESTONES = [
+    { id: 'apply', date: '2026-11-11', title: '申し込む', type: 'check', how: '公式サイトから申し込む。申込期間は12月9日 15:00まで', link: OFFICIAL },
+    { id: 'base', date: '2026-11-20', title: '模試を1回解いて、今の点数を知る', type: 'check', how: 'リスニングとリーディングを通しで1回。今の点数が分かれば、どこを伸ばすか決まる' },
+    { id: 'p5a', date: '2026-11-30', title: 'Part 5 を合計200問', type: 'count', goal: 200, step: 10, unit: '問', how: '1日10問なら20日。間違えた問題は解説まで読む' },
+    { id: 'words', date: '2026-12-09', title: '単語を合計300個', type: 'count', goal: 300, step: 10, unit: '個', how: '1日10個なら30日。覚えた単語は、例文ごと声に出す' },
+    { id: 'check', date: '2026-12-09', title: '申込が済んでいるか確かめる（15:00締切）', type: 'check', how: '申込完了のメールか、マイページで確かめる', link: OFFICIAL },
+    { id: 'p2', date: '2026-12-27', title: 'Part 2 を合計200問', type: 'count', goal: 200, step: 10, unit: '問', how: '1日10問。聞き取れなかった問題は、スクリプトを見てもう一度聞く' },
+    { id: 'p56', date: '2026-12-27', title: 'Part 5・6 を合計500問', type: 'count', goal: 500, step: 20, unit: '問', how: '1日20問。苦手な文法をメモしておく' },
+    { id: 'mock2', date: '2027-01-10', title: '模試を2回、通しで解く', type: 'count', goal: 2, step: 1, unit: '回', how: '2時間通しで。時間配分（Part 7 に75分）を体で覚える' },
+    { id: 'p7', date: '2027-01-17', title: 'Part 7 を合計15セット', type: 'count', goal: 15, step: 1, unit: 'セット', how: '1日1セット。時間を測って解く' },
+    { id: 'mock3', date: '2027-01-20', title: '本番と同じ時間帯に、模試をもう1回', type: 'check', how: '本番は午後。同じ時間に通して解いて、体を慣らす' },
+    { id: 'review', date: '2027-01-23', title: '間違いノートを見直す', type: 'check', how: '新しいことはしない。これまで間違えたところだけ' },
+    { id: 'exam', date: '2027-01-24', title: '本番で 700点', type: 'check', how: '受験票と写真付きの身分証。ここまで積んだ石を信じる' },
+  ];
+  state.toeic = state.toeic || {};
+  const msState = id => (state.toeic[id] = state.toeic[id] || { n: 0, done: false });
+  const msDone = m => m.type === 'count' ? msState(m.id).n >= m.goal : msState(m.id).done;
+  const daysLeft = iso => dayDiff(today, iso);
+  const whenText = iso => { const n = daysLeft(iso); return n > 0 ? `あと${n}日` : n === 0 ? '今日まで' : `${-n}日すぎた`; };
+  const nextMilestone = () => MILESTONES.find(m => !msDone(m));
+  const renderMilestones = () => {
+    const nx = nextMilestone();
+    const doneN = MILESTONES.filter(msDone).length;
+    $('#msCount').textContent = `${doneN} / ${MILESTONES.length} 達成`;
+    $('#msBar').style.width = (doneN / MILESTONES.length * 100) + '%';
+    $('#msLabel').textContent = doneN === MILESTONES.length ? 'ぜんぶ達成！' : `次は ${md(nx.date)}`;
+    $('#milestones').innerHTML = MILESTONES.map(m => {
+      const st = msState(m.id);
+      const ok = msDone(m);
+      const d = new Date(m.date + 'T12:00:00+09:00');
+      const prog = m.type === 'count' ? `<div class="ms-bar"><i style="width:${Math.min(100, st.n / m.goal * 100)}%"></i></div>` : '';
+      const act = m.type === 'count' ? (ok ? '✓' : `+${m.step}`) : '✓';
+      return `<li class="ms${ok ? ' done' : ''}${m === nx ? ' next' : ''}${daysLeft(m.date) < 0 ? ' late' : ''}" data-ms="${m.id}">
+        <span class="ms-date">${d.getUTCMonth() + 1}月<strong>${d.getUTCDate()}日</strong></span>
+        <span class="ms-main tap"><b>${esc(m.title)}</b><small class="when">${ok ? '達成！' : whenText(m.date)}${m.type === 'count' ? `・${st.n} / ${m.goal}${m.unit}` : ''}</small>${prog}</span>
+        <button class="ms-act" type="button" data-act="${m.id}" aria-label="${esc(m.title)}を記録">${act}</button>
+      </li>`;
+    }).join('');
+    const tn = $('#thNext');
+    if (nx) {
+      const d = new Date(nx.date + 'T12:00:00+09:00');
+      tn.hidden = false;
+      tn.innerHTML = `<span class="tn-date">${d.getUTCMonth() + 1}月<strong>${d.getUTCDate()}日</strong></span><span><small>次の目標・${whenText(nx.date)}</small><b>${esc(nx.title)}</b></span>`;
+      tn.dataset.ms = nx.id;
+    } else tn.hidden = true;
+  };
+  const msAdd = (m, delta) => {
+    const st = msState(m.id);
+    const was = msDone(m);
+    if (m.type === 'count') st.n = Math.max(0, st.n + delta); else st.done = delta > 0;
+    save();
+    renderMilestones();
+    if (!was && msDone(m)) { sfx('fanfare'); confetti(); say('ms', { t: m.title }, true); }
+    else sfx(delta > 0 ? 'check' : 'uncheck');
+  };
+  const openMilestone = m => {
+    const st = msState(m.id);
+    const ok = msDone(m);
+    const body = `<div class="ib-box"><b>${md(m.date)} までに・${ok ? '達成！' : whenText(m.date)}</b>${esc(m.how)}</div>` +
+      (m.type === 'count' ? `<div class="counter"><button class="minus" type="button" data-d="-${m.step}">−${m.step}</button><b id="ctrNum">${st.n}<small>/ ${m.goal}${m.unit}</small></b><button type="button" data-d="${m.step}">+${m.step}</button></div>` : '');
+    const acts = [];
+    if (m.type === 'check') acts.push({ label: ok ? '達成を取り消す' : 'できた！（達成）', green: !ok, ghost: ok, fn: () => { msAdd(m, ok ? -1 : 1); openMilestone(m); } });
+    if (m.link) acts.push({ label: '公式サイトを開く ↗', ghost: true, fn: () => window.open(m.link, '_blank', 'noopener') });
+    if (!['apply', 'check', 'exam'].includes(m.id)) acts.push(addAct('TOEIC'));
+    openInfo({ icon: ICON.toeic, color: 'orange', title: m.title, sub: 'TOEIC・この日までに、ここまで', body, actions: acts });
+    $$('#infoBody .counter button').forEach(b => b.addEventListener('click', () => { msAdd(m, +b.dataset.d); $('#ctrNum').innerHTML = `${msState(m.id).n}<small>/ ${m.goal}${m.unit}</small>`; }));
+  };
+  $('#milestones').addEventListener('click', e => {
+    const act = e.target.closest('[data-act]');
+    const li = e.target.closest('.ms');
+    if (!li) return;
+    const m = MILESTONES.find(x => x.id === li.dataset.ms);
+    if (act) { if (m.type === 'count') msAdd(m, m.step); else msAdd(m, msDone(m) ? -1 : 1); return; }
+    openMilestone(m);
+  });
+  $('#thNext').addEventListener('click', () => { const m = MILESTONES.find(x => x.id === $('#thNext').dataset.ms); if (m) openMilestone(m); });
+
   const md = iso => { const d = new Date(iso + 'T12:00:00+09:00'); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; };
   const GOALS = [
-    { icon: 'A+', c: 'orange', title: 'TOEIC 900超え', sub: 'まずは700、その先へ', next: 'まず1月24日に700点。取れたら、次は800点を目標に',
+    { task: 'TOEIC', steps: ['1月24日に700点', '次の公開テストで800点', '900点を超える'], icon: 'A+', c: 'orange', title: 'TOEIC 900超え', sub: 'まずは700、その先へ', next: 'まず1月24日に700点。取れたら、次は800点を目標に',
       stats: () => [`TOEIC 累計 ${minutesJa(timeMatching(/TOEIC/i))}`, `試験まで ${Math.max(0, dayDiff(today, '2027-01-24'))}日`] },
-    { icon: '◆', c: 'violet', title: '資格をたくさん', sub: '転職でも困らないほどに', next: '順番の案：TOEIC 700 → 英検準1級 → イタリア語の検定 → ワインエキスパート',
+    { task: '英検', steps: ['TOEIC 700', '英検準1級', 'イタリア語の検定', 'ワインエキスパート'], icon: '◆', c: 'violet', title: '資格をたくさん', sub: '転職でも困らないほどに', next: '順番の案：TOEIC 700 → 英検準1級 → イタリア語の検定 → ワインエキスパート',
       stats: () => ['いま挑戦中：TOEIC', `Duolingo 累計 ${minutesJa(timeMatching(/Duolingo/i))}`] },
-    { icon: '♪', c: 'pink', title: 'ピアノとヴァイオリン', sub: '上級者レベルまで', next: 'まずピアノで1曲を仕上げて、録音して残す',
+    { task: '1曲仕上げ', steps: ['仕上げたい1曲を決める', '難しい4小節から練習', '通して弾けたら録音', 'ヴァイオリンも始める'], icon: '♪', c: 'pink', title: 'ピアノとヴァイオリン', sub: '上級者レベルまで', next: 'まずピアノで1曲を仕上げて、録音して残す',
       stats: () => [`ピアノ 累計 ${minutesJa(timeMatching(/ピアノ/))}`, `この7日で ${countLast7(/ピアノ/)}日`] },
-    { icon: '✦', c: 'pink', title: '今よりきれいに', sub: 'やせて、可愛くなって、モテたい', next: 'ジムを週2回。行けた週は、今週の炎がもっと明るくなる',
+    { task: 'ジム', steps: ['ジムを週2回', '行けた日は炎を灯す', '1か月続いたら、自分にごほうび'], icon: '✦', c: 'pink', title: '今よりきれいに', sub: 'やせて、可愛くなって、モテたい', next: 'ジムを週2回。行けた週は、今週の炎がもっと明るくなる',
       stats: () => [`この7日のジム ${countLast7(/ジム/)}回`] },
-    { icon: '♛', c: 'gold', title: '誇れることを作る', sub: '特別な人と知り合う・海外で特別なことをする', next: 'ゲームを完成させて、誰かに遊んでもらう（いつかやりたい棚から）',
+    { task: 'ゲーム制作', steps: ['作りたい場面を1つ完成させる', '友だちに遊んでもらう', '感想をもらって直す', '公開する'], icon: '♛', c: 'gold', title: '誇れることを作る', sub: '特別な人と知り合う・海外で特別なことをする', next: 'ゲームを完成させて、誰かに遊んでもらう（いつかやりたい棚から）',
       stats: () => [`パソコン 累計 ${minutesJa(timeMatching(/パソコン/))}`] },
-    { icon: '90', c: 'green', title: 'カラオケで毎回90点', sub: 'いつ歌っても、90点を超える', next: '十八番を1曲決めて、音程バーを見ながら練習する',
+    { task: 'カラオケ練習', steps: ['十八番を1曲決める', 'その曲で90点', 'レパートリーを3曲に増やす'], icon: '90', c: 'green', title: 'カラオケで毎回90点', sub: 'いつ歌っても、90点を超える', next: '十八番を1曲決めて、音程バーを見ながら練習する',
       stats: () => [] },
   ];
   const renderGoal = () => {
@@ -754,23 +882,44 @@
     if (nowIdx < 0) nowIdx = today < PHASES[0].from ? 0 : PHASES.length;
     $('#phaseNow').textContent = nowIdx < PHASES.length ? `いまは ${nowIdx + 1}つ目` : 'おつかれさま';
     $('#phases').innerHTML = PHASES.map((p, i) => `
-      <li class="phase${i === nowIdx ? ' now' : i < nowIdx ? ' past' : ''}">
+      <li class="phase${i === nowIdx ? ' now' : i < nowIdx ? ' past' : ''}" data-ph="${i}">
         <span class="ph-no">${i < nowIdx ? '✓' : i + 1}</span>
         <h3>${p.title}<small>${p.from === p.to ? md(p.from) : `${md(p.from)}〜${md(p.to)}`}</small></h3>
         <ul>${p.items.map(x => `<li>${x}</li>`).join('')}</ul>
+        <span class="ph-more">押すと、くわしく</span>
       </li>`).join('');
+    renderMilestones();
     $('#toeicTime').textContent = minutesJa(timeMatching(/TOEIC/i)).replace(/^(\d+)秒$/, '0分');
     const has = ensureDay(today).tasks.some(t => /TOEIC/i.test(t.label));
     $('#addToeic').textContent = has ? '今日の道へ行く' : '今日の道に TOEIC を足す';
-    $('#goalList').innerHTML = GOALS.map(g => {
+    $('#goalList').innerHTML = GOALS.map((g, gi) => {
       const st = g.stats();
-      return `<li class="goal-item" style="--c:var(--${g.c});--cd:var(--${g.c}-d)">
+      return `<li class="goal-item tap" data-goal="${gi}" style="--c:var(--${g.c});--cd:var(--${g.c}-d)">
         <div class="gi-head"><span class="gi-ico">${g.icon}</span><div><h3>${g.title}</h3><p>${g.sub}</p></div></div>
         <div class="gi-next"><b>次の一歩</b>${g.next}</div>
         ${st.length ? `<div class="gi-stats">${st.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+        <span class="gi-cta">押すと、道のりと「今日の道に足す」 ›</span>
       </li>`;
     }).join('');
   };
+  $('#goalList').addEventListener('click', e => {
+    const li = e.target.closest('[data-goal]');
+    if (!li) return;
+    const g = GOALS[+li.dataset.goal];
+    const st = g.stats();
+    openInfo({ icon: `<b style="font-size:20px">${g.icon}</b>`, color: g.c, title: g.title, sub: g.sub,
+      body: `<div class="ib-box"><b>次の一歩</b>${esc(g.next)}</div><p>ここまでの道のり</p>${stepsHtml(g.steps, g.task === 'TOEIC' && MILESTONES.find(m => m.id === 'exam') && msDone(MILESTONES.find(m => m.id === 'exam')) ? 1 : 0)}${st.length ? `<div class="gi-stats">${st.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}`,
+      actions: [addAct(g.task)] });
+  });
+  $('#phases').addEventListener('click', e => {
+    const li = e.target.closest('[data-ph]');
+    if (!li) return;
+    const p = PHASES[+li.dataset.ph];
+    const related = MILESTONES.filter(m => m.date >= p.from && m.date <= p.to);
+    openInfo({ icon: ICON.toeic, color: 'orange', title: p.title, sub: `${md(p.from)}〜${md(p.to)} の毎日のペース`,
+      body: `<p>毎日やること</p>${stepsHtml(p.items)}${related.length ? `<div class="ib-box"><b>この時期の締切</b>${related.map(m => `${md(m.date)}　${esc(m.title)}${msDone(m) ? '（達成）' : ''}`).join('<br>')}</div>` : ''}`,
+      actions: [addAct('TOEIC')] });
+  });
   $('#addToeic').addEventListener('click', () => {
     const d = ensureDay(today);
     if (!d.tasks.some(t => /TOEIC/i.test(t.label))) { d.tasks.push({ id: uid(), label: 'TOEIC', done: false, secs: 0 }); save(); go('today'); say('add', { t: 'TOEIC' }, true); }
@@ -839,17 +988,82 @@
     { ico: '♜', c: 'violet', name: '城の完成', how: '1日の一手を全部やる', ok: () => Object.values(state.days).some(d => d.tasks.length > 1 && d.tasks.every(t => t.done)) },
     { ico: '宝', c: 'gold', name: '宝箱ハンター', how: 'クエストを全部クリア', ok: () => Object.values(state.days).some(d => d.chest) },
     { ico: '☾', c: 'pink', name: '余白も前進', how: '余白の日を使う', ok: () => Object.values(state.days).some(d => d.yohaku) },
-    { ico: '3', c: 'orange', name: '3日の炎', how: '3日続ける', ok: () => bestStreak() >= 3 },
-    { ico: '7', c: 'orange', name: '1週間の炎', how: '7日続ける', ok: () => bestStreak() >= 7 },
-    { ico: '30', c: 'orange', name: '1か月の炎', how: '30日続ける', ok: () => bestStreak() >= 30 },
-    { ico: '1h', c: 'blue', name: '1時間', how: '合計1時間 積む', ok: () => totalTime() >= 3600 },
-    { ico: '10h', c: 'blue', name: '10時間', how: '合計10時間 積む', ok: () => totalTime() >= 36000 },
-    { ico: '50h', c: 'blue', name: '50時間', how: '合計50時間 積む', ok: () => totalTime() >= 180000 },
-    { ico: '努', c: 'green', name: '努力家', how: '天才レベル2', ok: () => levelOf(totalStones()) >= 2 },
-    { ico: '秀', c: 'green', name: '秀才', how: '天才レベル3', ok: () => levelOf(totalStones()) >= 3 },
-    { ico: '天', c: 'violet', name: '天才', how: '天才レベル4', ok: () => levelOf(totalStones()) >= 4 },
-    { ico: '最', c: 'pink', name: '最強の自分', how: '天才レベル5', ok: () => levelOf(totalStones()) >= 5 },
+    { ico: '3', c: 'orange', name: '3日の炎', how: '3日続ける', ok: () => bestStreak() >= 3, prog: () => `最長 ${bestStreak()}日 / 3日` },
+    { ico: '7', c: 'orange', name: '1週間の炎', how: '7日続ける', ok: () => bestStreak() >= 7, prog: () => `最長 ${bestStreak()}日 / 7日` },
+    { ico: '30', c: 'orange', name: '1か月の炎', how: '30日続ける', ok: () => bestStreak() >= 30, prog: () => `最長 ${bestStreak()}日 / 30日` },
+    { ico: '1h', c: 'blue', name: '1時間', how: '合計1時間 積む', ok: () => totalTime() >= 3600, prog: () => `${minutesJa(totalTime())} / 1時間` },
+    { ico: '10h', c: 'blue', name: '10時間', how: '合計10時間 積む', ok: () => totalTime() >= 36000, prog: () => `${minutesJa(totalTime())} / 10時間` },
+    { ico: '50h', c: 'blue', name: '50時間', how: '合計50時間 積む', ok: () => totalTime() >= 180000, prog: () => `${minutesJa(totalTime())} / 50時間` },
+    { ico: '努', c: 'green', name: '努力家', how: '天才レベル2（60石）', ok: () => levelOf(totalStones()) >= 2, prog: () => `${totalStones()}石 / 60石` },
+    { ico: '秀', c: 'green', name: '秀才', how: '天才レベル3（300石）', ok: () => levelOf(totalStones()) >= 3, prog: () => `${totalStones()}石 / 300石` },
+    { ico: '天', c: 'violet', name: '天才', how: '天才レベル4（1000石）', ok: () => levelOf(totalStones()) >= 4, prog: () => `${totalStones()}石 / 1000石` },
+    { ico: '最', c: 'pink', name: '最強の自分', how: '天才レベル5（3000石）', ok: () => levelOf(totalStones()) >= 5, prog: () => `${totalStones()}石 / 3000石` },
   ];
+  const MOOD = [
+    { label: 'ジム' }, { label: 'ピアノ練習', task: 'ピアノ' }, { label: '勉強' }, { label: '難しい本を読む', task: '難しい本' }, { label: '部屋の掃除' },
+    { label: 'パソコン作業', task: 'パソコン', note: 'スタバなど外でやると尚よい', wide: true },
+  ];
+  const SHELF = [
+    { label: 'ゲームを完成させて誰かに遊んでもらう', c: 'violet', task: 'ゲーム制作', steps: ['作りたい場面を1つ完成させる', '友だちに遊んでもらう', '感想をもらって直す'] },
+    { label: 'イタリア語を検定まで', c: 'green', task: 'イタリア語', steps: ['Duolingoでイタリア語を毎日', '検定の級と日程を調べる', '過去問を1回解いてみる'] },
+    { label: 'ヨーロッパに数ヶ月滞在', c: 'blue', task: '旅の下調べ', steps: ['住んでみたい街を3つ選ぶ', '滞在の方法を調べる', 'いつ行けるか、ざっくり決める'] },
+    { label: 'ワインの資格（ワインエキスパートなど）', c: 'pink', task: 'ワインの下調べ', steps: ['試験日と申込期間を調べる', '勉強の量を調べる', '始める時期を決める'] },
+    { label: '英検準1級', c: 'orange', task: '英検', steps: ['試験日と申込期間を調べる', '過去問を1セット眺める', 'TOEICの後に始めるか決める'] },
+    { label: 'ピアノで仕上げた1曲を残せる形にする', c: 'violet', task: '1曲仕上げ', steps: ['仕上げたい1曲を決める', '難しい4小節から練習', 'スマホで録音して残す'] },
+    { label: 'noteを続けて「この人の文章」と覚えてもらう', c: 'gold', task: 'note', steps: ['書きたいことを3行メモ', '週に1本、書いて出す', '同じテーマで続ける'] },
+  ];
+  const renderLists = () => {
+    $('#mood').innerHTML = MOOD.map((m, i) => { const p = planFor(m.task || m.label); return `<li class="tap${m.wide ? ' wide' : ''}${hasToday(m.task || m.label) ? ' added' : ''}" data-mood="${i}" style="${colorVars(p)}"><i>${iconOf(p)}</i><span>${m.label}${m.note ? `<small>${m.note}</small>` : ''}</span></li>`; }).join('');
+    $('#shelf').innerHTML = SHELF.map((x, i) => `<li class="tap" data-shelf="${i}" style="--c:var(--${x.c})">${esc(x.label)}</li>`).join('');
+  };
+  $('#mood').addEventListener('click', e => {
+    const li = e.target.closest('[data-mood]');
+    if (!li) return;
+    const m = MOOD[+li.dataset.mood];
+    const label = m.task || m.label;
+    const p = planFor(label);
+    openInfo({ icon: iconOf(p), color: p.color, title: m.label, sub: '気分が上がること',
+      body: `<div class="ib-box"><b>まずやること</b>${esc(p.first)}</div>${stepsHtml(p.steps)}<p>目安 ${p.min}分${m.note ? `・${esc(m.note)}` : ''}</p>`,
+      actions: [addAct(label)] });
+  });
+  $('#shelf').addEventListener('click', e => {
+    const li = e.target.closest('[data-shelf]');
+    if (!li) return;
+    const x = SHELF[+li.dataset.shelf];
+    openInfo({ icon: ICON.star, color: x.c, title: x.label, sub: 'いつかやりたい棚・約束じゃなくてアイデア',
+      body: `<p>小さな一歩から</p>${stepsHtml(x.steps)}<div class="ib-box"><b>今日できること</b>${esc(planFor(x.task).first)}（目安 ${planFor(x.task).min}分）</div>`,
+      actions: [addAct(x.task)] });
+  });
+  $('#badges').addEventListener('click', e => {
+    const li = e.target.closest('[data-badge]');
+    if (!li) return;
+    const b = BADGES[+li.dataset.badge];
+    const ok = b.ok();
+    openInfo({ icon: `<b style="font-size:20px">${ok ? b.ico : '?'}</b>`, color: ok ? b.c : 'gray', title: b.name, sub: ok ? '取った！' : 'まだ。でも、すぐそこ',
+      body: `<div class="ib-box"><b>取り方</b>${esc(b.how)}</div>${b.prog ? `<p>いま：${esc(b.prog())}</p>` : ''}`,
+      actions: [{ label: 'とじる', ghost: true, fn: closeSheets }] });
+  });
+  $('#heatmap').addEventListener('click', e => {
+    const c = e.target.closest('[data-day]');
+    if (!c) return;
+    const iso = c.dataset.day;
+    const d = state.days[iso];
+    const rows = d ? d.tasks.map(t => { const p = planFor(t.label); return `<li class="${t.done ? '' : 'not'}" style="${colorVars(p)}"><span class="dr-ico">${iconOf(p)}</span><span>${esc(t.label)}${t.done ? '' : '（まだ）'}</span><small>${elapsedOf(t, iso) >= 1 ? minutesJa(elapsedOf(t, iso)) : ''}</small></li>`; }).join('') : '';
+    openInfo({ icon: ICON.flame, color: 'orange', title: fmtJa(iso), sub: d ? `+${dayStones(d)}石・${minutesJa(daySecs(iso))}${d.yohaku ? '・余白の日' : ''}` : '記録なし',
+      body: d ? `<ul class="day-rec">${rows || '<li>一手なし</li>'}</ul>` : '<p>この日の記録はありません</p>',
+      actions: iso === today ? [{ label: '今日の道へ', fn: () => { closeSheets(); go('today'); } }] : [{ label: 'とじる', ghost: true, fn: closeSheets }] });
+  });
+  $('#timeBars').addEventListener('click', e => {
+    const li = e.target.closest('[data-label]');
+    if (!li) return;
+    const label = li.dataset.label;
+    const p = planFor(label);
+    let days = 0, w = 0;
+    Object.entries(state.days).forEach(([iso, d]) => d.tasks.forEach(t => { if (t.label === label && t.done) days++; if (t.label === label && dayDiff(iso, today) < 7) w += elapsedOf(t, iso); }));
+    openInfo({ icon: iconOf(p), color: p.color, title: label, sub: `これまで ${minutesJa(timeByLabel()[label] || 0)}`,
+      body: `<div class="gi-stats"><span>できた日 ${days}日</span><span>この7日 ${minutesJa(w)}</span><span>目安 ${p.min}分/回</span></div>`,
+      actions: [addAct(label)] });
+  });
   const totalTime = () => Object.keys(state.days).reduce((a, k) => a + daySecs(k), 0);
   const renderMe = () => {
     const st = totalStones();
@@ -873,7 +1087,7 @@
     $('#badgeCount').textContent = `${got.length} / ${BADGES.length}`;
     $('#badges').innerHTML = BADGES.map(b => {
       const ok = got.includes(b.name);
-      return `<li class="badge${ok ? '' : ' locked'}${ok && !seen.includes(b.name) ? ' new' : ''}" style="--c:var(--${b.c});--cd:var(--${b.c}-d)"><i>${ok ? b.ico : '?'}</i><b>${b.name}</b><small>${b.how}</small></li>`;
+      return `<li class="badge tap${ok ? '' : ' locked'}${ok && !seen.includes(b.name) ? ' new' : ''}" data-badge="${BADGES.indexOf(b)}" style="--c:var(--${b.c});--cd:var(--${b.c}-d)"><i>${ok ? b.ico : '?'}</i><b>${b.name}</b><small>${b.how}</small></li>`;
     }).join('');
     try { localStorage.setItem('saikyo.badges', JSON.stringify(got)); } catch {}
 
@@ -887,7 +1101,7 @@
       const rest = !fut && dayStatus(iso) === 'yohaku';
       const o = v ? (.18 + .82 * v / max).toFixed(2) : 0;
       const dnum = +iso.slice(8);
-      return `<div class="hm${fut ? ' future' : v && !rest ? ' on' : rest ? ' rest' : ''}${iso === today ? ' today' : ''}" style="--o:${o}" title="${fmtJa(iso)} +${v}石"><small>${dnum}</small></div>`;
+      return `<div class="hm${fut ? ' future' : v && !rest ? ' on' : rest ? ' rest' : ''}${iso === today ? ' today' : ''}"${fut ? '' : ` data-day="${iso}"`} style="--o:${o}" title="${fmtJa(iso)} +${v}石"><small>${dnum}</small></div>`;
     }).join('');
 
     // 何に積んだか
@@ -895,9 +1109,10 @@
     const tmax = tb.length ? tb[0][1] : 1;
     $('#timeBars').innerHTML = tb.length ? tb.map(([k, v]) => {
       const p = planFor(k);
-      return `<li class="tb-row" style="--c:var(--${p.color})"><span class="tb-ico">${iconOf(p)}</span><div><div class="tb-top">${esc(k)}<span>${minutesJa(v)}</span></div><div class="tb-bar"><i style="width:${Math.max(4, v / tmax * 100)}%"></i></div></div></li>`;
+      return `<li class="tb-row tap" data-label="${esc(k)}" style="--c:var(--${p.color})"><span class="tb-ico">${iconOf(p)}</span><div><div class="tb-top">${esc(k)}<span>${minutesJa(v)}</span></div><div class="tb-bar"><i style="width:${Math.max(4, v / tmax * 100)}%"></i></div></div></li>`;
     }).join('') : '<li class="empty">タイマーで測ると、ここに積んだ時間が並びます</li>';
 
+    renderLists();
     $('#ranks').innerHTML = RANK.slice(1).map((name, i) => {
       const l = i + 1;
       return `<li class="rank-row${l <= lv ? ' got' : ''}${l === lv ? ' now' : ''}"><i>${l}</i><span>${name}</span><small>${LEVELS[l]}石</small></li>`;
