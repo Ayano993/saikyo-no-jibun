@@ -16,7 +16,7 @@
   // ミュージックアプリの曲を止めない。自作 BGM を流すときだけ「再生（playback）」にする。
   // ホーム画面から開いたときは、こうしないと効果音がミュージックアプリを止めてしまう。
   const setSession = type => { try { if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type; } catch {} };
-  setSession(prefs.bgm && !prefs.external ? 'playback' : 'ambient');
+  // 開いた時点では音の扱いに触らない（触るだけでミュージックアプリが止まることがある）
 
   // 音の通り道をつくる（ライブ用と書き出し用で共通）
   const build = () => {
@@ -47,6 +47,7 @@
     if (ctx) return ctx;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
+    setSession(wanted ? 'playback' : 'ambient');
     ctx = new AC();
     build();
     return ctx;
@@ -236,10 +237,16 @@
   };
 
   const SILENT = URL.createObjectURL(toWav({ getChannelData: () => new Float32Array(RATE / 4) })); // 0.25秒の無音
-  const bgmEl = new Audio();
-  bgmEl.loop = true;
-  bgmEl.preload = 'auto';
-  bgmEl.setAttribute('playsinline', '');
+  let bgmEl = null;
+  const el = () => {
+    if (!bgmEl) {
+      bgmEl = new Audio();
+      bgmEl.loop = true;
+      bgmEl.preload = 'auto';
+      bgmEl.setAttribute('playsinline', '');
+    }
+    return bgmEl;
+  };
   let wanted = false, loading = false;
   const elVol = () => Math.min(1, prefs.vol * .9);
   const mediaInfo = name => {
@@ -250,15 +257,16 @@
       artwork: [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
     });
     try {
-      navigator.mediaSession.setActionHandler('play', () => bgmEl.play());
-      navigator.mediaSession.setActionHandler('pause', () => bgmEl.pause());
+      navigator.mediaSession.setActionHandler('play', () => el().play());
+      navigator.mediaSession.setActionHandler('pause', () => el().pause());
     } catch {}
   };
   const bgmStart = () => {
     wanted = true;
     setSession('playback');
+    const a = el();
     // タップの中で一度鳴らして <audio> を解放しておく（書き出しの後でも再生できるように）
-    if (!bgmEl.src || bgmEl.paused) { bgmEl.src = rendered[prefs.track] || SILENT; bgmEl.play().catch(() => {}); }
+    if (!a.src || a.paused) { a.src = rendered[prefs.track] || SILENT; a.play().catch(() => {}); }
     const name = TRACKS[prefs.track] ? prefs.track : 'phonk';
     if (loading) return;
     loading = true;
@@ -266,19 +274,19 @@
       loading = false;
       if (!wanted) return;
       if (prefs.track !== name) return bgmStart();
-      if (!bgmEl.src.endsWith(url)) bgmEl.src = url;
-      bgmEl.volume = elVol();
-      bgmEl.play().catch(() => {});
+      if (!a.src.endsWith(url)) a.src = url;
+      a.volume = elVol();
+      a.play().catch(() => {});
       mediaInfo(name);
     }).catch(() => { loading = false; });
   };
-  const bgmStop = () => { wanted = false; bgmEl.pause(); setSession('ambient'); };
+  const bgmStop = () => { wanted = false; if (bgmEl) bgmEl.pause(); if (ctx) setSession('ambient'); };
   let duckTimer;
   const duck = (secs = 1.2) => {
-    if (bgmEl.paused) return;
+    if (!bgmEl || bgmEl.paused) return;
     bgmEl.volume = elVol() * .35;
     clearTimeout(duckTimer);
-    duckTimer = setTimeout(() => { bgmEl.volume = elVol(); }, secs * 1000);
+    duckTimer = setTimeout(() => { if (bgmEl) bgmEl.volume = elVol(); }, secs * 1000);
   };
 
   // ---------- 効果音 ----------
@@ -328,7 +336,7 @@
       // 無音を一度鳴らして確実に解放
       const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource();
       s.buffer = b; s.connect(ctx.destination); s.start(0);
-      if (prefs.bgm && bgmEl.paused) bgmStart();
+      if (prefs.bgm && (!bgmEl || bgmEl.paused)) bgmStart();
     }
   };
   ['pointerdown', 'touchend', 'keydown'].forEach(ev => window.addEventListener(ev, unlock, { capture: true, passive: true }));
@@ -351,14 +359,12 @@
       if (on) {
         prefs.bgm = false;
         wanted = false;
-        bgmEl.pause();
-        bgmEl.src = SILENT;
+        if (bgmEl) { bgmEl.pause(); bgmEl.src = SILENT; bgmEl = null; }
         if (ctx) { const c = ctx; ctx = null; c.close().catch(() => {}); }
         unlocked = false;
         if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
       }
       savePrefs();
-      setSession('ambient');
     },
     get external() { return !!prefs.external; },
     setSfx(on) { prefs.sfx = on; savePrefs(); },
@@ -366,9 +372,9 @@
       if (!TRACKS[name]) return;
       const changed = prefs.track !== name;
       prefs.track = name; savePrefs();
-      if (changed && wanted) { bgmEl.pause(); bgmEl.src = SILENT; bgmEl.play().catch(() => {}); bgmStart(); }
+      if (changed && wanted) { const a = el(); a.pause(); a.src = SILENT; a.play().catch(() => {}); bgmStart(); }
     },
-    setVol(v) { prefs.vol = v; savePrefs(); if (master) master.gain.setTargetAtTime(v, ctx.currentTime, .05); bgmEl.volume = elVol(); },
+    setVol(v) { prefs.vol = v; savePrefs(); if (master) master.gain.setTargetAtTime(v, ctx.currentTime, .05); if (bgmEl) bgmEl.volume = elVol(); },
     get playing() { return wanted; },
     get audio() { return bgmEl; },
   };
