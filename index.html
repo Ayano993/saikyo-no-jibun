@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>最強の自分</title>
 <meta name="description" content="できたらすごいことを、できるようになりたい。毎朝ひらく、わたしの城への道。">
-<meta name="theme-color" content="#070b1f">
+<meta name="theme-color" content="#1c0b3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,113 +26,128 @@
   <svg class="hero-art" viewBox="0 0 1200 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
       <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#03050f"/>
-        <stop offset=".35" stop-color="#0b1233"/>
-        <stop offset=".58" stop-color="#1d1f52"/>
-        <stop offset=".72" stop-color="#43306a"/>
-        <stop offset=".82" stop-color="#7a4a6e"/>
+        <stop offset="0" stop-color="#1c0b3a"/>
+        <stop offset=".18" stop-color="#4a1a5e"/>
+        <stop offset=".34" stop-color="#9a2f6e"/>
+        <stop offset=".48" stop-color="#e2506a"/>
+        <stop offset=".6" stop-color="#ff7d4f"/>
+        <stop offset=".72" stop-color="#ffb35c"/>
+        <stop offset=".8" stop-color="#ffd987"/>
       </linearGradient>
-      <radialGradient id="milky" cx=".5" cy=".5" r=".5">
-        <stop offset="0" stop-color="#b9c4ff" stop-opacity=".28"/>
-        <stop offset=".5" stop-color="#7f86d6" stop-opacity=".1"/>
-        <stop offset="1" stop-color="#000" stop-opacity="0"/>
+      <radialGradient id="sunCore" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#fffdf2"/>
+        <stop offset=".55" stop-color="#fff0b8"/>
+        <stop offset="1" stop-color="#ffd36b"/>
       </radialGradient>
-      <radialGradient id="castleGlow" cx=".5" cy=".5" r=".5">
-        <stop offset="0" stop-color="#ffd58a" stop-opacity=".55"/>
-        <stop offset=".4" stop-color="#ffb35c" stop-opacity=".16"/>
-        <stop offset="1" stop-color="#ffb35c" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="moonGlow" cx=".5" cy=".5" r=".5">
-        <stop offset="0" stop-color="#fff4d6" stop-opacity=".35"/>
-        <stop offset="1" stop-color="#fff4d6" stop-opacity="0"/>
+      <radialGradient id="sunHalo" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#fff3c4" stop-opacity=".95"/>
+        <stop offset=".25" stop-color="#ffd27a" stop-opacity=".6"/>
+        <stop offset=".6" stop-color="#ff9a52" stop-opacity=".22"/>
+        <stop offset="1" stop-color="#ff7a4a" stop-opacity="0"/>
       </radialGradient>
       <linearGradient id="road" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0" stop-color="#f6dfae" stop-opacity=".95"/>
-        <stop offset=".6" stop-color="#f3c98a" stop-opacity=".8"/>
-        <stop offset="1" stop-color="#ffd690" stop-opacity=".9"/>
+        <stop offset="0" stop-color="#ffe6a8"/>
+        <stop offset=".7" stop-color="#ffd27a"/>
+        <stop offset="1" stop-color="#fff6d6"/>
       </linearGradient>
       <linearGradient id="mFar" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#3a3770"/><stop offset="1" stop-color="#2a2858"/>
+        <stop offset="0" stop-color="#e8708a"/><stop offset="1" stop-color="#b8487a"/>
+      </linearGradient>
+      <linearGradient id="mFar2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#a83f78"/><stop offset="1" stop-color="#7c2c6a"/>
       </linearGradient>
       <linearGradient id="mMain" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#2b2a5c"/><stop offset="1" stop-color="#17173d"/>
+        <stop offset="0" stop-color="#6c2464"/><stop offset="1" stop-color="#3a1240"/>
+      </linearGradient>
+      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffcf7a" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#ffd98f" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#ffcf7a" stop-opacity="0"/>
       </linearGradient>
       <linearGradient id="mMid" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#191a40"/><stop offset="1" stop-color="#0e0f2a"/>
+        <stop offset="0" stop-color="#3a1240"/><stop offset="1" stop-color="#25092b"/>
       </linearGradient>
       <linearGradient id="mNear" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#0c0d24"/><stop offset="1" stop-color="#05060f"/>
+        <stop offset="0" stop-color="#22082a"/><stop offset="1" stop-color="#120414"/>
       </linearGradient>
       <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
-      <filter id="blur20"><feGaussianBlur stdDeviation="20"/></filter>
+      <filter id="blur14"><feGaussianBlur stdDeviation="14"/></filter>
       <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
 
     <rect width="1200" height="1000" fill="url(#sky)"/>
-    <ellipse cx="560" cy="250" rx="720" ry="120" fill="url(#milky)" transform="rotate(-24 560 250)" filter="url(#blur20)"/>
-    <ellipse cx="620" cy="210" rx="420" ry="40" fill="#c9d1ff" opacity=".06" transform="rotate(-24 620 210)" filter="url(#blur20)"/>
     <g id="stars"></g>
-    <g class="shooting"><line x1="0" y1="0" x2="120" y2="40" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>
 
-    <!-- moon -->
-    <circle cx="770" cy="130" r="110" fill="url(#moonGlow)"/>
-    <path d="M770 92a38 38 0 1 0 31 60a33 33 0 1 1 -31 -60z" fill="#fff1cf"/>
+    <!-- sun rays -->
+    <g class="rays" transform="translate(600 330)">
+      <g id="rayset" fill="#fff1c2"></g>
+    </g>
+    <circle cx="600" cy="330" r="330" fill="url(#sunHalo)"/>
+    <circle class="sun" cx="600" cy="330" r="96" fill="url(#sunCore)"/>
 
-    <!-- far range -->
-    <path d="M0 560 L90 500 L170 540 L260 470 L340 520 L420 455 L480 490 L540 430 L600 470 L670 420 L740 470 L820 440 L900 495 L980 450 L1060 505 L1130 470 L1200 510 V1000 H0Z" fill="url(#mFar)" opacity=".85"/>
-    <path d="M0 610 L120 560 L220 600 L330 548 L430 592 L520 560 L640 600 L760 556 L860 596 L960 560 L1080 600 L1200 566 V1000 H0Z" fill="#2b2a5e" opacity=".7"/>
+    <!-- clouds -->
+    <g class="clouds" filter="url(#blur6)">
+      <path class="cloud c1" d="M80 250 h320 a24 24 0 0 1 0 22 h-320 a11 11 0 0 1 0 -22z" fill="#ff9d7a" opacity=".55"/>
+      <path class="cloud c2" d="M760 210 h360 a26 26 0 0 1 0 24 h-360 a12 12 0 0 1 0 -24z" fill="#ffb08a" opacity=".5"/>
+      <path class="cloud c3" d="M140 420 h420 a22 22 0 0 1 0 18 h-420 a9 9 0 0 1 0 -18z" fill="#ffd59a" opacity=".55"/>
+      <path class="cloud c4" d="M700 450 h400 a20 20 0 0 1 0 16 h-400 a8 8 0 0 1 0 -16z" fill="#ffe0a8" opacity=".6"/>
+      <path class="cloud c5" d="M300 140 h260 a18 18 0 0 1 0 16 h-260 a8 8 0 0 1 0 -16z" fill="#d86a9a" opacity=".45"/>
+    </g>
 
-    <!-- glow behind castle -->
-    <circle cx="600" cy="320" r="170" fill="url(#castleGlow)"/>
+    <!-- birds -->
+    <g class="birds" fill="none" stroke="#3a1240" stroke-width="2.6" stroke-linecap="round">
+      <path d="M0 0 q8 -8 16 0 q8 -8 16 0"/>
+      <path d="M40 -26 q6 -6 12 0 q6 -6 12 0"/>
+      <path d="M-30 -40 q5 -5 10 0 q5 -5 10 0"/>
+    </g>
+
+    <!-- far ranges -->
+    <path d="M0 560 L90 500 L170 540 L260 470 L340 520 L420 455 L480 490 L540 440 L600 470 L670 430 L740 470 L820 440 L900 495 L980 450 L1060 505 L1130 470 L1200 510 V1000 H0Z" fill="url(#mFar)" opacity=".9"/>
+    <path d="M0 620 L120 566 L220 606 L330 552 L430 596 L520 566 L640 606 L760 560 L860 600 L960 566 L1080 606 L1200 570 V1000 H0Z" fill="url(#mFar2)"/>
 
     <!-- main mountain -->
     <path d="M150 820 C260 720 380 600 470 470 C520 400 560 352 600 336 C640 352 690 400 735 470 C820 600 940 720 1050 820 Z" fill="url(#mMain)"/>
-    <path d="M600 336 C640 352 690 400 735 470 C800 570 880 660 960 740 C850 680 760 600 700 520 C660 460 630 400 600 336Z" fill="#000" opacity=".22"/>
-    <path d="M600 336 C585 350 570 362 555 380 C575 375 590 372 600 376 C612 372 628 376 646 382 C632 364 616 350 600 336Z" fill="#c8c6ff" opacity=".22"/>
+    <path d="M470 470 C520 400 560 352 600 336 C640 352 690 400 735 470" fill="none" stroke="url(#rim)" stroke-width="5" opacity=".9"/>
+    <path d="M600 336 C640 352 690 400 735 470 C800 570 880 660 960 740 C850 680 760 600 700 520 C660 460 630 400 600 336Z" fill="#000" opacity=".18"/>
 
-    <!-- castle -->
+    <!-- castle (silhouette against the sun) -->
     <g class="castle" transform="translate(600 338)">
-      <path d="M-46 0 V-30 H-38 V-36 H-32 V-30 H-24 V-36 H-18 V-30 H-10 V-44 H10 V-30 H18 V-36 H24 V-30 H32 V-36 H38 V-30 H46 V0Z" fill="#1b1a3e"/>
-      <rect x="-36" y="-62" width="14" height="40" fill="#1f1d47"/>
-      <path d="M-39 -62 L-29 -86 L-19 -62Z" fill="#2c2960"/>
-      <rect x="22" y="-56" width="14" height="34" fill="#1f1d47"/>
-      <path d="M19 -56 L29 -78 L39 -56Z" fill="#2c2960"/>
-      <rect x="-9" y="-82" width="18" height="50" fill="#232050"/>
-      <path d="M-12 -82 L0 -112 L12 -82Z" fill="#332f6d"/>
-      <line x1="0" y1="-112" x2="0" y2="-126" stroke="#2c2960" stroke-width="1.6"/>
-      <path class="flag" d="M0 -126 L13 -122 L0 -118Z" fill="#f4c56d"/>
-      <g fill="#ffcf7a" filter="url(#glow)">
+      <path d="M-46 0 V-30 H-38 V-36 H-32 V-30 H-24 V-36 H-18 V-30 H-10 V-44 H10 V-30 H18 V-36 H24 V-30 H32 V-36 H38 V-30 H46 V0Z" fill="#3a1238"/>
+      <rect x="-36" y="-62" width="14" height="40" fill="#3a1238"/>
+      <path d="M-39 -62 L-29 -86 L-19 -62Z" fill="#4a1844"/>
+      <rect x="22" y="-56" width="14" height="34" fill="#3a1238"/>
+      <path d="M19 -56 L29 -78 L39 -56Z" fill="#4a1844"/>
+      <rect x="-9" y="-82" width="18" height="50" fill="#3a1238"/>
+      <path d="M-12 -82 L0 -112 L12 -82Z" fill="#4a1844"/>
+      <line x1="0" y1="-112" x2="0" y2="-130" stroke="#3a1238" stroke-width="2"/>
+      <path class="flag" d="M0 -130 L18 -125 L0 -120Z" fill="#ff4f6d"/>
+      <g fill="#ffe08a">
         <rect x="-3" y="-70" width="6" height="9" rx="3"/>
         <rect x="-31" y="-52" width="4" height="7" rx="2"/>
         <rect x="27" y="-46" width="4" height="7" rx="2"/>
         <rect x="-4" y="-14" width="8" height="14" rx="4"/>
-        <rect class="twinkle-win" x="-22" y="-22" width="4" height="6" rx="2"/>
-        <rect x="18" y="-22" width="4" height="6" rx="2"/>
       </g>
     </g>
 
     <!-- mid hills -->
     <path d="M0 740 C120 700 220 690 330 720 C420 744 470 760 540 752 C620 742 700 712 800 706 C930 698 1060 730 1200 712 V1000 H0Z" fill="url(#mMid)"/>
+    <path d="M0 740 C120 700 220 690 330 720 C420 744 470 760 540 752 C620 742 700 712 800 706 C930 698 1060 730 1200 712" fill="none" stroke="#ff9a6a" stroke-width="2" opacity=".35"/>
 
     <!-- road -->
     <g class="road" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M600 1010 C560 960 470 930 470 885 C470 840 600 830 640 800 C670 776 640 752 590 740" stroke="url(#road)" stroke-width="40" opacity=".9"/>
-      <path d="M590 740 C540 728 520 706 560 688 C610 666 700 660 690 628 C680 600 600 600 590 580" stroke="url(#road)" stroke-width="16" opacity=".85"/>
-      <path d="M590 580 C580 560 640 548 650 528 C660 506 600 500 590 482 C582 466 630 456 632 440 C634 422 600 418 596 404 C592 390 616 384 612 372 C608 360 600 352 600 344" stroke="url(#road)" stroke-width="6" opacity=".85"/>
-      <path d="M600 1010 C560 960 470 930 470 885 C470 840 600 830 640 800 C670 776 640 752 590 740 C540 728 520 706 560 688 C610 666 700 660 690 628 C680 600 600 600 590 580 C580 560 640 548 650 528 C660 506 600 500 590 482 C582 466 630 456 632 440 C634 422 600 418 596 404 C592 390 616 384 612 372 C608 360 600 352 600 344" stroke="#ffd690" stroke-width="10" opacity=".18" filter="url(#blur6)"/>
-    </g>
-    <g class="lanterns" fill="#ffd58a" filter="url(#glow)">
-      <circle cx="505" cy="905" r="3.4"/><circle cx="618" cy="812" r="2.6"/><circle cx="570" cy="694" r="2"/>
-      <circle cx="676" cy="636" r="1.8"/><circle cx="636" cy="534" r="1.4"/><circle cx="620" cy="446" r="1.2"/>
+      <path d="M600 1010 C560 960 470 930 470 885 C470 840 600 830 640 800 C670 776 640 752 590 740 C540 728 520 706 560 688 C610 666 700 660 690 628 C680 600 600 600 590 580 C580 560 640 548 650 528 C660 506 600 500 590 482 C582 466 630 456 632 440 C634 422 600 418 596 404 C592 390 616 384 612 372 C608 360 600 352 600 344" stroke="#ffb35c" stroke-width="22" opacity=".35" filter="url(#blur14)"/>
+      <path d="M600 1010 C560 960 470 930 470 885 C470 840 600 830 640 800 C670 776 640 752 590 740" stroke="url(#road)" stroke-width="40"/>
+      <path d="M590 740 C540 728 520 706 560 688 C610 666 700 660 690 628 C680 600 600 600 590 580" stroke="url(#road)" stroke-width="16"/>
+      <path d="M590 580 C580 560 640 548 650 528 C660 506 600 500 590 482 C582 466 630 456 632 440 C634 422 600 418 596 404 C592 390 616 384 612 372 C608 360 600 352 600 344" stroke="url(#road)" stroke-width="6"/>
+      <path class="road-run" d="M600 1010 C560 960 470 930 470 885 C470 840 600 830 640 800 C670 776 640 752 590 740 C540 728 520 706 560 688 C610 666 700 660 690 628 C680 600 600 600 590 580 C580 560 640 548 650 528 C660 506 600 500 590 482 C582 466 630 456 632 440 C634 422 600 418 596 404 C592 390 616 384 612 372 C608 360 600 352 600 344" stroke="#fffaf0" stroke-width="3" stroke-dasharray="14 60" opacity=".9"/>
     </g>
 
     <!-- near hills -->
     <path d="M0 860 C90 830 200 820 300 850 C380 874 430 900 470 930 L470 1000 H0Z" fill="url(#mNear)"/>
     <path d="M760 1000 C770 940 820 890 900 870 C1000 846 1100 850 1200 830 V1000Z" fill="url(#mNear)"/>
-    <path d="M0 930 C140 905 300 920 420 960 L440 1000 H0Z" fill="#04050c"/>
-    <path d="M800 1000 C880 950 1040 930 1200 940 V1000Z" fill="#04050c"/>
-    <!-- trees -->
-    <g fill="#04050c">
+    <path d="M0 930 C140 905 300 920 420 960 L440 1000 H0Z" fill="#0f0312"/>
+    <path d="M800 1000 C880 950 1040 930 1200 940 V1000Z" fill="#0f0312"/>
+    <g fill="#120414">
       <path d="M120 860 l14 -46 l14 46z M150 866 l10 -34 l10 34z M300 870 l12 -40 l12 40z"/>
       <path d="M980 868 l14 -50 l14 50z M1012 872 l10 -36 l10 36z M1110 862 l13 -44 l13 44z"/>
     </g>
@@ -145,13 +160,13 @@
   </div>
 
   <div class="hero-copy">
-    <p class="eyebrow">MY STRONGEST SELF</p>
+    <p class="eyebrow">RISE · MY STRONGEST SELF</p>
     <h1>最強の自分</h1>
     <p class="banner">
       <span class="banner-mark" aria-hidden="true"></span>
       <span>「できたらすごいことを<br>できるようになりたい」</span>
     </p>
-    <a class="hero-cta" href="#today">今日の一手へ <span aria-hidden="true">↓</span></a>
+    <a class="hero-cta" href="#today">今日も、登りにいく <span aria-hidden="true">→</span></a>
   </div>
 </header>
 
@@ -180,6 +195,15 @@
   <div class="motto">
     <span class="motto-icon" aria-hidden="true">♜</span>
     <p>今日の一手は、私が1つ選ぶ。<br>どれか1つで城は積める。</p>
+  </div>
+
+  <div class="heat">
+    <div class="buddy-slot" data-buddy="heat"></div>
+    <div>
+      <p class="heat-say" id="heatSay"></p>
+      <div class="heat-bar"><div class="heat-fill" id="heatFill"></div></div>
+      <p class="heat-num" id="heatNum"></p>
+    </div>
   </div>
 
   <ul class="tasks" id="tasks"></ul>
@@ -367,9 +391,9 @@
 <!-- ============ CLOSING ============ -->
 <footer class="closing" id="closing">
   <svg class="closing-art" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <path d="M0 300 V210 L160 150 L300 200 L460 120 L600 60 L740 120 L900 190 L1040 140 L1200 200 V300Z" fill="#0d0f2b"/>
-    <path d="M0 300 V250 C200 220 360 240 520 270 C700 300 900 230 1200 250 V300Z" fill="#06071a"/>
-    <g transform="translate(600 60) scale(.6)" fill="#1f1d47">
+    <circle cx="600" cy="70" r="140" fill="#ffb35c" opacity=".2"/><circle cx="600" cy="70" r="58" fill="#ffe7a8"/><path d="M0 300 V210 L160 150 L300 200 L460 120 L600 60 L740 120 L900 190 L1040 140 L1200 200 V300Z" fill="#4a1844"/>
+    <path d="M0 300 V250 C200 220 360 240 520 270 C700 300 900 230 1200 250 V300Z" fill="#1b0920"/>
+    <g transform="translate(600 60) scale(.6)" fill="#2a0c2e">
       <path d="M-46 0 V-30 H-38 V-36 H-32 V-30 H-24 V-36 H-18 V-30 H-10 V-44 H10 V-30 H18 V-36 H24 V-30 H32 V-36 H38 V-30 H46 V0Z"/>
       <rect x="-9" y="-82" width="18" height="50"/><path d="M-12 -82 L0 -112 L12 -82Z"/>
       <rect x="-3" y="-70" width="6" height="9" rx="3" fill="#ffcf7a"/>
@@ -390,6 +414,11 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<div class="buddy" id="buddy" role="status" aria-live="polite">
+  <p class="bubble" id="buddyBubble"></p>
+  <div class="buddy-slot" data-buddy="pop"></div>
+</div>
+
 <dialog class="sheet" id="templateSheet">
   <form method="dialog">
     <h3>毎日の項目</h3>
@@ -403,6 +432,7 @@
 </dialog>
 
 <script src="quotes.js"></script>
+<script src="buddy.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

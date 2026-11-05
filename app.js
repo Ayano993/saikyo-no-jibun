@@ -71,7 +71,31 @@
       setTimeout(() => s.remove(), 1000);
     }
   };
-  const CHEERS = ['石がひとつ積まれました', '城がまた少し高くなりました', '今日の一手、お見事です', '頂に一歩近づきました'];
+  // チェックしたときのヒナタの反応（数が増えるほど大げさに）
+  const cheer = (day, t) => {
+    const n = day.tasks.filter(x => x.done).length;
+    const total = day.tasks.length;
+    if (n === total && total > 1) return window.Hinata.say('all', { n }, { mood: 'shock', big: true });
+    if (day.pick === t.id) return window.Hinata.say('pickDone', { t: t.label }, { mood: 'shock', big: true });
+    if (n === 1) return window.Hinata.say('first', { n }, { mood: 'joy' });
+    if (n === 2) return window.Hinata.say('second', { n }, { mood: 'shock' });
+    return window.Hinata.say('more', { n }, { mood: 'shock', big: n >= 4 });
+  };
+  const streakOf = () => {
+    let k = 0;
+    for (let i = dayStatus(today) === 'none' ? 1 : 0; ; i++) {
+      if (dayStatus(addDays(today, -i)) === 'none') break;
+      k++;
+    }
+    return k;
+  };
+  const greet = () => {
+    const k = streakOf();
+    if ([3, 7, 14, 21, 30, 50, 100].includes(k)) return window.Hinata.say('milestone', { n: k }, { mood: 'shock', big: true });
+    if (k >= 2) return window.Hinata.say('streak', { n: k }, { mood: 'shock' });
+    const h = +new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tokyo', hour: 'numeric', hour12: false }).format(new Date());
+    window.Hinata.say(h >= 4 && h < 11 ? 'morning' : h < 18 && h >= 11 ? 'noon' : 'night', {}, { mood: 'joy' });
+  };
 
   // ---------- ヒーロー ----------
   const renderHero = () => {
@@ -85,9 +109,18 @@
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     const NS = 'http://www.w3.org/2000/svg';
     const g = document.getElementById('stars');
-    for (let i = 0; i < 190; i++) {
+    const rays = document.getElementById('rayset');
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElementNS(NS, 'path');
+      const w = 2 + rnd() * 5;
+      p.setAttribute('d', `M0 0 L${-w} -${520 + rnd() * 160} L${w} -${520 + rnd() * 160}Z`);
+      p.setAttribute('transform', `rotate(${i * 15 + rnd() * 6})`);
+      p.setAttribute('opacity', (.25 + rnd() * .5).toFixed(2));
+      rays.appendChild(p);
+    }
+    for (let i = 0; i < 60; i++) {
       const c = document.createElementNS(NS, 'circle');
-      const y = Math.pow(rnd(), 1.4) * 620;
+      const y = Math.pow(rnd(), 2) * 220;
       c.setAttribute('cx', (rnd() * 1200).toFixed(1));
       c.setAttribute('cy', y.toFixed(1));
       const big = rnd() > .93;
@@ -105,10 +138,9 @@
       c.setAttribute('cx', (380 + rnd() * 440).toFixed(1));
       c.setAttribute('cy', (640 + rnd() * 320).toFixed(1));
       c.setAttribute('r', (1 + rnd() * 1.6).toFixed(1));
-      c.setAttribute('fill', '#ffe3a0');
       c.setAttribute('class', 'firefly');
-      c.style.setProperty('--d', (6 + rnd() * 6).toFixed(1) + 's');
-      c.style.setProperty('--delay', (-rnd() * 10).toFixed(1) + 's');
+      c.style.setProperty('--d', (4 + rnd() * 4).toFixed(1) + 's');
+      c.style.setProperty('--delay', (-rnd() * 8).toFixed(1) + 's');
       c.style.setProperty('--dx', ((rnd() - .5) * 40).toFixed(0) + 'px');
       c.style.setProperty('--dy', (-10 - rnd() * 30).toFixed(0) + 'px');
       ff.appendChild(c);
@@ -139,7 +171,7 @@
     ul.innerHTML = day.tasks.map(t => `
       <li class="task${t.done ? ' done' : ''}${day.pick === t.id ? ' picked' : ''}" data-id="${t.id}">
         <button class="check" type="button" aria-label="${esc(t.label)}を${t.done ? '未完了に戻す' : '完了にする'}" aria-pressed="${t.done}">${CHECK_SVG}</button>
-        <span class="task-label">${day.pick === t.id ? '<span class="task-tag">今日の一手</span>' : ''}${esc(t.label)}</span>
+        <span class="task-label">${day.pick === t.id ? '<span class="task-tag">今日の一手</span>' : ''}<span class="task-text">${esc(t.label)}</span></span>
         <button class="pick" type="button" aria-pressed="${day.pick === t.id}" aria-label="今日の一手に選ぶ" title="今日の一手に選ぶ">♜</button>
         <button class="del" type="button" aria-label="${esc(t.label)}を今日のリストから外す" title="外す">×</button>
       </li>`).join('');
@@ -155,6 +187,7 @@
     renderWall();
     renderHistory();
     renderHero();
+    window.Hinata.heat({ done: day.tasks.filter(t => t.done).length, total: day.tasks.length, yohaku: day.yohaku });
   };
 
   const renderWall = () => {
@@ -197,21 +230,21 @@
     const t = day.tasks.find(x => x.id === li.dataset.id);
     if (!t) return;
     if (e.target.closest('.check')) {
-      const wasStone = dayStatus(today) === 'done';
+      const r = li.querySelector('.check').getBoundingClientRect();
       t.done = !t.done;
       save();
       renderTasks();
       if (t.done) {
-        const r = e.target.closest('.check') ? li.querySelector('.check').getBoundingClientRect() : li.getBoundingClientRect();
         sparkle(r.left + r.width / 2, r.top + r.height / 2);
-        if (!wasStone) toast(CHEERS[Math.floor(Math.random() * CHEERS.length)]);
-        if (navigator.vibrate) navigator.vibrate(12);
+        cheer(day, t);
+      } else {
+        window.Hinata.say('undo', {}, {});
       }
     } else if (e.target.closest('.pick')) {
       day.pick = day.pick === t.id ? null : t.id;
       save();
       renderTasks();
-      if (day.pick) toast(`今日の一手は「${t.label}」`);
+      if (day.pick) window.Hinata.say('pick', { t: t.label }, { mood: 'joy' });
     } else if (e.target.closest('.del')) {
       day.tasks = day.tasks.filter(x => x.id !== t.id);
       if (day.pick === t.id) day.pick = null;
@@ -227,6 +260,7 @@
     day.tasks.push({ id: uid(), label, done: false });
     save();
     renderTasks();
+    window.Hinata.say('add', { t: label }, { mood: 'shock' });
   };
   $('#taskAdd').addEventListener('submit', e => {
     e.preventDefault();
@@ -242,7 +276,7 @@
     day.yohaku = !day.yohaku;
     save();
     renderTasks();
-    if (day.yohaku) toast('余白も、ちゃんと前進です');
+    if (day.yohaku) window.Hinata.say('yohaku', {}, { mood: 'joy' });
   });
 
   // 毎日の項目
@@ -375,6 +409,7 @@
   buildSky();
   refreshAll();
   onScroll();
+  setTimeout(greet, 1400);
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
