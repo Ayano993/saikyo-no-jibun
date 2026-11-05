@@ -77,6 +77,17 @@
     heatMore: ['こんなにできたの！？ 正気！？'],
     heatAll: ['全部できてる…！ 今日は優勝！！'],
     heatYohaku: ['今日は余白の日。これも立派な前進！'],
+    timerStart: ['よーい、どん！！ 「{t}」、見てるからね…！', 'スタート！ 城がわくわくしてる！', '計測スタート！ 今日のあなた、止まらない予感…！'],
+    timerGoal: ['え、もう{m}分！？ 目標クリアじゃん！！ 正気！？', '{m}分やりきった…！ 集中力どうなってるの！？', '目安の{m}分、突破！！ もう伝説の人…！'],
+    timerStop: ['{m}分も積んだの！？ えらすぎる…！', 'え、{m}分！？ その集中、分けてほしい…！'],
+    timerShort: ['ちょっとでも前進！ その一歩が城になる！', '始めたのがえらい！ 本当に！'],
+    openApp: ['いってらっしゃい！ 時間はこっちで測っておくね！', '行ってこーい！ 戻ったら時間、ちゃんと積まれてるよ！'],
+    welcomeBack: ['おかえり！ いま{m}分！ まだ測ってるよ〜！', 'おかえり〜！ {m}分たった！ 止めるときは■を押してね！'],
+    planSaved: ['「{t}」の作戦、決まった！ もう勝ち筋しか見えない！'],
+    templateSaved: ['明日から、この項目で始めるね！'],
+    bgmOn: ['音楽スタート！ 気合、入ってきた〜！'],
+    imported: ['記録、ぜんぶ戻ってきた！'],
+    importFail: ['あれ、そのファイルは読めなかった…！'],
   };
 
   const el = document.getElementById('buddy');
@@ -96,6 +107,7 @@
     clearTimeout(timer);
     timer = setTimeout(() => el.classList.remove('show', 'big'), opts.big ? 5200 : 3800);
     if (opts.big) confetti();
+    else if (window.Sound) window.Sound.sfx('pop');
     if (navigator.vibrate) navigator.vibrate(opts.big ? [20, 40, 20] : 12);
   };
   el.addEventListener('click', () => el.classList.remove('show', 'big'));
@@ -118,7 +130,8 @@
 
   // 熱量メーター横のヒナタ
   const heatSvg = document.querySelector('.heat .buddy-svg');
-  const heat = ({ done, total, yohaku }) => {
+  const heat = ({ done, total, yohaku, secs = 0 }) => {
+    document.getElementById('heatTime').textContent = secs >= 60 ? `${Math.round(secs / 60) >= 60 ? Math.floor(secs / 3600) + '時間' + (Math.round(secs / 60) % 60 ? Math.round(secs / 60) % 60 + '分' : '') : Math.round(secs / 60) + '分'}` : `${Math.floor(secs)}秒`;
     const ratio = total ? done / total : 0;
     document.getElementById('heatFill').style.width = (yohaku && !done ? 30 : Math.max(ratio * 100, done ? 8 : 0)) + '%';
     document.getElementById('heatNum').innerHTML = `今日の熱量 <b>${done}</b> / ${total}`;

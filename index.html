@@ -155,8 +155,7 @@
   </svg>
 
   <div class="hero-top">
-    <span class="hero-date" id="heroDate"></span>
-    <span class="hero-moon" id="heroCount"></span>
+    <span class="hero-date"><span id="heroDate"></span><span class="hero-streak" id="heroStreak"></span></span>
   </div>
 
   <div class="hero-copy">
@@ -197,12 +196,14 @@
     <p>今日の一手は、私が1つ選ぶ。<br>どれか1つで城は積める。</p>
   </div>
 
+  <div class="focus" id="focus"></div>
+
   <div class="heat">
     <div class="buddy-slot" data-buddy="heat"></div>
     <div>
       <p class="heat-say" id="heatSay"></p>
       <div class="heat-bar"><div class="heat-fill" id="heatFill"></div></div>
-      <p class="heat-num" id="heatNum"></p>
+      <p class="heat-num"><span id="heatNum"></span><span class="heat-time">積み時間 <b id="heatTime">0分</b></span></p>
     </div>
   </div>
 
@@ -227,6 +228,7 @@
       <div><span class="stat-num" id="statWeek">0</span><span class="stat-label">この7日</span></div>
     </div>
     <div class="stone-wall" id="stoneWall" aria-label="最近の記録"></div>
+    <p class="week-time">この7日の積み時間 <b id="weekTime">0分</b></p>
     <p class="stone-legend"><i class="lg lg-done"></i>一手を積んだ日 <i class="lg lg-yohaku"></i>余白の日 <i class="lg lg-none"></i>まだ</p>
   </div>
 
@@ -419,6 +421,40 @@
   <div class="buddy-slot" data-buddy="pop"></div>
 </div>
 
+<!-- 計測中のバー -->
+<div class="timer-pill" id="timerPill" role="status">
+  <button type="button" class="pill-jump" id="pillJump"><span class="pill-dot"></span><span id="pillLabel"></span><b id="pillTime">00:00</b></button>
+  <button type="button" class="pill-stop" id="pillStop" aria-label="計測を止める">■</button>
+</div>
+
+<!-- 音の設定 -->
+<button type="button" class="sound-btn" id="soundBtn" aria-label="音の設定" aria-expanded="false" aria-controls="soundPanel">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path class="sb-note" d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path class="sb-slash" d="M3 3l18 18"/></svg>
+  <span class="sb-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+</button>
+<div class="sound-panel" id="soundPanel">
+  <p class="sp-title">音の設定</p>
+  <label class="sw-row"><span><b>BGM</b><small>気合が乗る自作のループ曲</small></span><input type="checkbox" id="bgmToggle"><i class="switch"></i></label>
+  <label class="sw-row"><span><b>効果音</b><small>チェック・ヒナタ・タイマー</small></span><input type="checkbox" id="sfxToggle"><i class="switch"></i></label>
+  <label class="vol-row"><span>音量</span><input type="range" id="volRange" min="0" max="100" step="1"></label>
+  <p class="sp-note">iPhoneのマナーモード中は鳴りません。音はすべてこのページで作ったオリジナルです。</p>
+</div>
+
+<dialog class="sheet" id="planSheet">
+  <form method="dialog">
+    <h3>「<span id="planName"></span>」の作戦</h3>
+    <p class="sheet-note">今すぐやる最初の一歩と、目安の時間、手順を決めます。</p>
+    <label class="field"><span>まずやること</span><input type="text" id="planFirst" maxlength="40"></label>
+    <label class="field"><span>目安（分）</span><input type="number" id="planMin" min="1" max="240" inputmode="numeric"></label>
+    <label class="field"><span>手順（1行に1つ）</span><textarea id="planSteps" rows="4"></textarea></label>
+    <div class="sheet-actions">
+      <button value="reset" type="submit" class="ghost">元に戻す</button>
+      <button value="cancel" type="submit" class="ghost">やめる</button>
+      <button value="save" type="submit">保存</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog class="sheet" id="templateSheet">
   <form method="dialog">
     <h3>毎日の項目</h3>
@@ -432,6 +468,7 @@
 </dialog>
 
 <script src="quotes.js"></script>
+<script src="audio.js"></script>
 <script src="buddy.js"></script>
 <script src="app.js"></script>
 </body>
