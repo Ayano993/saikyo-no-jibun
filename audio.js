@@ -12,6 +12,12 @@
 
   let ctx = null, master, bgmBus, sfxBus, delay, noiseBuf, drive;
 
+  // iPhone の音の扱い：ふだんは「ほかの音楽と一緒に鳴らす（ambient）」にして、
+  // ミュージックアプリの曲を止めない。自作 BGM を流すときだけ「再生（playback）」にする。
+  // ホーム画面から開いたときは、こうしないと効果音がミュージックアプリを止めてしまう。
+  const setSession = type => { try { if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type; } catch {} };
+  setSession(prefs.bgm ? 'playback' : 'ambient');
+
   // 音の通り道をつくる（ライブ用と書き出し用で共通）
   const build = () => {
     const comp = ctx.createDynamicsCompressor();
@@ -249,6 +255,7 @@
   };
   const bgmStart = () => {
     wanted = true;
+    setSession('playback');
     // タップの中で一度鳴らして <audio> を解放しておく（書き出しの後でも再生できるように）
     if (!bgmEl.src || bgmEl.paused) { bgmEl.src = rendered[prefs.track] || SILENT; bgmEl.play().catch(() => {}); }
     const name = TRACKS[prefs.track] ? prefs.track : 'phonk';
@@ -264,7 +271,7 @@
       mediaInfo(name);
     }).catch(() => { loading = false; });
   };
-  const bgmStop = () => { wanted = false; bgmEl.pause(); };
+  const bgmStop = () => { wanted = false; bgmEl.pause(); setSession('ambient'); };
   let duckTimer;
   const duck = (secs = 1.2) => {
     if (bgmEl.paused) return;
