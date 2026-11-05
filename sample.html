@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>最強の自分 サンプル</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fffaf4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fffaf4;
+    --card: #ffffff;
+    --line: #f1e4da;
+    --ink: #3b2a2f;
+    --ink-2: #7d6a70;
+    --ink-3: #b3a3a8;
+    --orange: #ff8a3d; --orange-d: #e2691c;
+    --green: #3ccf8e; --green-d: #22a86c;
+    --pink: #ff6b98; --pink-d: #e04577;
+    --blue: #4aa8ff; --blue-d: #2a85dc;
+    --gold: #ffc23d; --gold-d: #e09c12;
+    --gray: #ece3dc; --gray-d: #d6c9bf;
+    --r: 18px;
+    --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    overflow-x: hidden;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+  .sample-note { background: var(--ink); color: #fff; text-align: center; font-size: 12px; padding: 6px 12px; }
+
+  /* 上のバー */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255, 250, 244, .94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--line);
+  }
+  .topbar .wrap { display: flex; align-items: center; gap: 8px; height: 60px; padding-top: env(safe-area-inset-top, 0px); }
+  .stat { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 17px; padding: 6px 10px; border-radius: 12px; }
+  .stat svg { width: 24px; height: 24px; }
+  .stat.streak { color: var(--orange-d); }
+  .stat.time { color: var(--blue-d); }
+  .spacer { flex: 1; }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px;
+    display: grid; place-items: center; color: var(--ink-2);
+  }
+  .icon-btn svg { width: 22px; height: 22px; }
+  .icon-btn:active { border-bottom-width: 2px; transform: translateY(2px); }
+
+  /* 朝焼けの帯 */
+  .banner {
+    position: relative; margin-top: 16px; height: 132px; border-radius: 22px; overflow: hidden;
+    background: linear-gradient(180deg, #5b2a7a 0%, #c9457a 38%, #ff8a4c 66%, #ffd27a 100%);
+    color: #fff;
+  }
+  .banner svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .banner-text { position: absolute; left: 18px; bottom: 14px; }
+  .banner-date { font-size: 13px; font-weight: 700; opacity: .95; }
+  .banner-title { margin: 0; font-size: 26px; font-weight: 800; line-height: 1.25; text-shadow: 0 2px 10px rgba(80, 10, 40, .35); }
+
+  /* ヒナタ */
+  .coach { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; }
+  .coach svg { width: 72px; height: 72px; flex: none; }
+  .bubble {
+    position: relative; flex: 1;
+    background: var(--card); border: 2px solid var(--line); border-radius: 18px;
+    padding: 12px 14px; font-weight: 700; font-size: 16px; line-height: 1.5;
+  }
+  .bubble::before {
+    content: ""; position: absolute; left: -9px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+    background: var(--card); border-left: 2px solid var(--line); border-bottom: 2px solid var(--line);
+    transform: rotate(45deg);
+  }
+  .coach.wow svg { animation: wow .8s ease-in-out; }
+  @keyframes wow { 25% { transform: translateY(-10px) rotate(-8deg) scale(1.08); } 50% { transform: translateY(-10px) rotate(8deg) scale(1.08); } 75% { transform: translateY(0) rotate(-4deg); } }
+
+  /* 今日の道 */
+  .section-title { display: flex; align-items: baseline; justify-content: space-between; margin: 20px 0 4px; }
+  .section-title h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .section-title span { font-size: 13px; color: var(--ink-2); font-weight: 700; }
+  .path { position: relative; height: 520px; margin-top: 4px; }
+  .path-line { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .node {
+    position: absolute; transform: translate(-50%, -50%);
+    width: 84px; height: 78px; border-radius: 50%;
+    border: 0; padding: 0;
+    background: var(--c); box-shadow: 0 8px 0 var(--cd);
+    display: grid; place-items: center; color: #fff;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .node:active { transform: translate(-50%, calc(-50% + 6px)); box-shadow: 0 2px 0 var(--cd); }
+  .node svg { width: 38px; height: 38px; }
+  .node.todo { background: var(--card); box-shadow: 0 8px 0 var(--gray-d); color: var(--c); border: 3px solid var(--gray-d); }
+  .node.todo:active { box-shadow: 0 2px 0 var(--gray-d); }
+  .node.done::after {
+    content: ""; position: absolute; right: -2px; top: -2px; width: 28px; height: 28px; border-radius: 50%;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%2322a86c' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, .12);
+  }
+  .node.current::before {
+    content: ""; position: absolute; inset: -12px; border-radius: 50%;
+    border: 4px solid var(--c); opacity: .35;
+    animation: ring 1.8s ease-out infinite;
+  }
+  @keyframes ring { from { transform: scale(.9); opacity: .5; } to { transform: scale(1.18); opacity: 0; } }
+  .node-label {
+    position: absolute; transform: translate(-50%, 0);
+    font-weight: 800; font-size: 15px; white-space: nowrap; text-align: center; line-height: 1.3;
+  }
+  .node-label small { display: block; font-weight: 700; font-size: 12px; color: var(--ink-2); }
+  .tip {
+    position: absolute; transform: translate(0, -50%);
+    background: var(--card); border: 2px solid var(--line); border-radius: 12px;
+    padding: 6px 12px; font-weight: 800; font-size: 14px; color: var(--orange-d);
+    white-space: nowrap; animation: bob 1.6s ease-in-out infinite;
+  }
+  .tip::after { content: ""; position: absolute; left: -8px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: var(--card); border-left: 2px solid var(--line); border-bottom: 2px solid var(--line); transform: rotate(45deg); }
+  @keyframes bob { 50% { transform: translate(6px, -50%); } }
+  .castle { --c: var(--gold); --cd: var(--gold-d); width: 104px; height: 96px; }
+  .castle svg { width: 52px; height: 52px; }
+  .castle.locked { --c: #f6eadf; --cd: var(--gray-d); color: var(--ink-3); }
+
+  /* 今日の名言（1行だけ） */
+  .quote { margin-top: 8px; padding: 14px 16px; border-radius: var(--r); background: var(--card); border: 2px solid var(--line); }
+  .quote-label { font-size: 12px; font-weight: 800; color: var(--orange-d); }
+  .quote-text { margin: 2px 0 0; font-weight: 700; font-size: 17px; }
+  .quote-by { font-size: 12px; color: var(--ink-2); }
+
+  /* ボタン */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px 16px; border-radius: 16px; border: 0;
+    font-weight: 800; font-size: 17px; letter-spacing: .04em;
+    background: var(--c, var(--orange)); color: #fff; box-shadow: 0 5px 0 var(--cd, var(--orange-d));
+    transition: transform .08s, box-shadow .08s;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--cd, var(--orange-d)); }
+  .btn.ghost { background: var(--card); color: var(--ink-2); box-shadow: 0 4px 0 var(--gray-d); border: 2px solid var(--gray-d); }
+  .btn.green { --c: var(--green); --cd: var(--green-d); }
+
+  /* 下から出る作戦シート */
+  .scrim { position: fixed; inset: 0; background: rgba(40, 20, 30, .35); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    background: var(--card); border-radius: 26px 26px 0 0;
+    padding: 10px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(105%); transition: transform .28s cubic-bezier(.2, .8, .2, 1);
+    max-width: 520px; margin: 0 auto;
+    box-shadow: 0 -10px 30px rgba(60, 20, 30, .12);
+  }
+  .sheet.show { transform: none; }
+  .grab { width: 44px; height: 5px; border-radius: 3px; background: var(--gray-d); margin: 0 auto 14px; }
+  .sheet-head { display: flex; align-items: center; gap: 14px; }
+  .sheet-icon { width: 60px; height: 56px; border-radius: 18px; display: grid; place-items: center; background: var(--c); box-shadow: 0 4px 0 var(--cd); color: #fff; flex: none; }
+  .sheet-icon svg { width: 30px; height: 30px; }
+  .sheet h3 { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.25; }
+  .sheet-first { margin: 2px 0 0; color: var(--ink-2); font-weight: 700; font-size: 15px; }
+  .timer { display: flex; align-items: baseline; justify-content: space-between; margin-top: 18px; }
+  .timer b { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .timer span { color: var(--ink-2); font-weight: 700; font-size: 14px; }
+  .bar { height: 16px; border-radius: 99px; background: var(--gray); overflow: hidden; margin-top: 6px; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--c); transition: width .5s; position: relative; }
+  .bar i::after { content: ""; position: absolute; left: 8px; right: 8px; top: 3px; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .45); }
+  .steps { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .steps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; font-weight: 700; font-size: 15px; }
+  .steps li span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--gray); color: var(--ink-2); font-size: 13px; }
+  .sheet-actions { display: grid; gap: 12px; margin-top: 20px; }
+  .sheet-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* 下のタブ */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: var(--card); border-top: 2px solid var(--line);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .tabbar .wrap { display: flex; justify-content: space-between; padding: 0 4px; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 14px; border: 2px solid transparent; background: none; font-weight: 800; font-size: 12px; color: var(--ink-3); }
+  .tab svg { width: 28px; height: 28px; }
+  .tab.on { color: var(--orange-d); background: #fff1e6; border-color: #ffd7bb; }
+
+  /* 紙吹雪 */
+  .confetti { position: fixed; top: -12px; width: 9px; height: 14px; z-index: 80; pointer-events: none; border-radius: 2px; animation: fall var(--t, 2.2s) cubic-bezier(.2, .6, .4, 1) forwards; }
+  @keyframes fall { to { transform: translate(var(--x), 105vh) rotate(var(--r)); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="sample-note">サンプル画面です（ここでの記録は保存されません）</div>
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="stat streak" title="連続の日">
+      <svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z" fill="#ff8a3d"/><path d="M12 13c1 2 3 3 3 5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3 .2 1 .8 1.5 1.5 1.5 0-1.5-.5-2.5 0-3.5z" fill="#ffd27a"/></svg>
+      <span>3</span>
+    </span>
+    <span class="stat time" title="今日の積み時間">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="#4aa8ff"/><path d="M12 9v4l3 2" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/><rect x="9" y="2" width="6" height="3" rx="1.5" fill="#2a85dc"/></svg>
+      <span id="totalTime">10分</span>
+    </span>
+    <span class="spacer"></span>
+    <button class="icon-btn" type="button" aria-label="音の設定">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="banner">
+    <svg viewBox="0 0 400 132" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="300" cy="78" r="34" fill="#fff3c4"/>
+      <circle cx="300" cy="78" r="58" fill="#fff3c4" opacity=".25"/>
+      <path d="M180 132 L300 60 L420 132Z" fill="#6c2464"/>
+      <g transform="translate(300 62)" fill="#3a1238">
+        <rect x="-16" y="-14" width="32" height="14"/><rect x="-4" y="-30" width="8" height="18"/><path d="M-6 -30 L0 -40 L6 -30Z"/>
+        <rect x="-14" y="-24" width="6" height="12"/><rect x="8" y="-22" width="6" height="10"/>
+      </g>
+      <path d="M0 132 C60 100 120 104 200 120 L240 132Z" fill="#3a1240" opacity=".8"/>
+      <path d="M300 64 C292 80 312 92 300 104 C288 116 300 124 290 132" stroke="#fff1c2" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="banner-text">
+      <div class="banner-date">11月5日（木）</div>
+      <p class="banner-title">今日も、<br>城へ一歩</p>
+    </div>
+  </div>
+
+  <div class="coach" id="coach">
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <path d="M60 32 C50 22 52 10 58 4 C58 14 64 16 66 10 C72 18 70 28 60 32Z" fill="#ff5e6d"/>
+      <path d="M24 70 C10 66 8 82 18 90 C24 86 28 80 28 72Z" fill="#ff9a45"/>
+      <path d="M96 70 C110 66 112 82 102 90 C96 86 92 80 92 72Z" fill="#ff9a45"/>
+      <circle cx="60" cy="68" r="40" fill="#ffc552"/>
+      <ellipse cx="60" cy="86" rx="22" ry="16" fill="#fff4d6"/>
+      <ellipse cx="34" cy="74" rx="7" ry="4.5" fill="#ff6f8a" opacity=".55"/><ellipse cx="86" cy="74" rx="7" ry="4.5" fill="#ff6f8a" opacity=".55"/>
+      <g id="eyesNormal"><ellipse cx="46" cy="60" rx="9" ry="11" fill="#fff"/><ellipse cx="74" cy="60" rx="9" ry="11" fill="#fff"/><circle cx="48" cy="62" r="5.5" fill="#2a0f2e"/><circle cx="72" cy="62" r="5.5" fill="#2a0f2e"/><circle cx="50" cy="59.5" r="2" fill="#fff"/><circle cx="74" cy="59.5" r="2" fill="#fff"/><path d="M54 72 L66 72 L60 80Z" fill="#ff6a2a"/></g>
+      <g id="eyesWow" style="display:none"><ellipse cx="45" cy="58" rx="13" ry="15" fill="#fff" stroke="#2a0f2e" stroke-width="1.2"/><ellipse cx="75" cy="58" rx="13" ry="15" fill="#fff" stroke="#2a0f2e" stroke-width="1.2"/><circle cx="45" cy="58" r="3.2" fill="#2a0f2e"/><circle cx="75" cy="58" r="3.2" fill="#2a0f2e"/><ellipse cx="60" cy="82" rx="7" ry="8" fill="#7a1a3a"/><path d="M53 72 L67 72 L60 76Z" fill="#ff6a2a"/></g>
+    </svg>
+    <p class="bubble" id="say">今日の一手、どこから行く？<br>光ってる丸を押してね</p>
+  </div>
+
+  <div class="section-title"><h2>今日の道</h2><span id="progress">1 / 3 できた</span></div>
+  <div class="path" id="path"></div>
+
+  <div class="quote">
+    <div class="quote-label">今日の名言</div>
+    <p class="quote-text">千里の道も一歩から。</p>
+    <div class="quote-by">ことわざ（老子『道徳経』より）</div>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet" id="sheet" aria-modal="true" role="dialog" aria-labelledby="sheetTitle">
+  <div class="grab"></div>
+  <div class="sheet-head">
+    <span class="sheet-icon" id="sheetIcon"></span>
+    <div>
+      <h3 id="sheetTitle"></h3>
+      <p class="sheet-first" id="sheetFirst"></p>
+    </div>
+  </div>
+  <div class="timer"><b id="sheetTime">00:00</b><span id="sheetGoal"></span></div>
+  <div class="bar"><i id="sheetBar"></i></div>
+  <ol class="steps" id="sheetSteps"></ol>
+  <div class="sheet-actions">
+    <button class="btn" type="button" id="startBtn">▶ はじめる</button>
+    <div class="sheet-row">
+      <button class="btn ghost" type="button" id="appBtn">アプリを開く</button>
+      <button class="btn green" type="button" id="doneBtn">できた！</button>
+    </div>
+  </div>
+</section>
+
+<nav class="tabbar" aria-label="メニュー">
+  <div class="wrap">
+    <button class="tab on" type="button"><svg viewBox="0 0 24 24"><path d="M4 21h16M6 21V10h12v11M5 10V4h3v2h2V4h4v2h2V4h3v6" fill="#ffd7bb" stroke="#e2691c" stroke-width="1.8" stroke-linejoin="round"/><rect x="10" y="15" width="4" height="6" rx="2" fill="#e2691c"/></svg>きょう</button>
+    <button class="tab" type="button"><svg viewBox="0 0 24 24"><path d="M4 15l3-8h10l3 8-8 5z" fill="#e8ddd5" stroke="#b3a3a8" stroke-width="1.8" stroke-linejoin="round"/></svg>石</button>
+    <button class="tab" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#e8ddd5" stroke="#b3a3a8" stroke-width="1.8"/><path d="M4 7l8 6 8-6" fill="none" stroke="#b3a3a8" stroke-width="1.8"/></svg>便り</button>
+    <button class="tab" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#e8ddd5" stroke="#b3a3a8" stroke-width="1.8"/><path d="M4 21c1-5 5-7 8-7s7 2 8 7" fill="#e8ddd5" stroke="#b3a3a8" stroke-width="1.8"/></svg>わたし</button>
+  </div>
+</nav>
+
+<script>
+(() => {
+  const ICON = {
+    duo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-12 5 12M5.8 14h6.4"/><path d="M15 11c1-1 4-1 4 1v6M19 15c-2 0-4 .3-4 1.6S16 18 17 18s2-.6 2-1.5"/></svg>',
+    piano: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/></svg>',
+    pc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+    castle: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21V10h2V7h2v3h2V5h2V3h2v2h2v5h2V7h2v3h2v11h-7v-4a2 2 0 0 0-4 0v4z"/></svg>',
+  };
+  const tasks = [
+    { id: 'duo', label: 'Duolingo', c: '--green', cd: '--green-d', min: 10, first: 'アプリを開いて、レッスンを1つ', steps: ['アプリを開く', '今日のレッスンを1つ（約5分）', '余力があれば、もう1つか復習を1つ'], app: true, done: true, secs: 600 },
+    { id: 'piano', label: 'ピアノ', c: '--pink', cd: '--pink-d', min: 15, first: '鍵盤のふたを開けて、音階を3分', steps: ['指ならし：音階かハノンを3分', 'いまの曲を2小節ずつ、ゆっくり8分', '最後に、止まらず通して1回'], done: false, secs: 0 },
+    { id: 'pc', label: 'パソコン', c: '--blue', cd: '--blue-d', min: 25, first: '「今日つくるもの」を1行メモする', steps: ['今日つくるものを1行で書く', 'タイマーを押して25分だけ集中', '終わったら、できたことを一言メモ'], done: false, secs: 0 },
+  ];
+  const POS = [[50, 12], [28, 36], [66, 58]];
+  const CASTLE = [44, 84];
+  const $ = s => document.querySelector(s);
+  const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  let open = null, running = null, startAt = 0;
+
+  const say = (text, wow) => {
+    $('#say').innerHTML = text;
+    $('#eyesNormal').style.display = wow ? 'none' : '';
+    $('#eyesWow').style.display = wow ? '' : 'none';
+    const c = $('#coach'); c.classList.remove('wow'); void c.offsetWidth; if (wow) c.classList.add('wow');
+  };
+
+  const render = () => {
+    const cur = tasks.find(t => !t.done);
+    const done = tasks.filter(t => t.done).length;
+    $('#progress').textContent = `${done} / ${tasks.length} できた`;
+    const total = tasks.reduce((a, t) => a + t.secs, 0) + (running ? (Date.now() - startAt) / 1000 : 0);
+    $('#totalTime').textContent = `${Math.floor(total / 60)}分`;
+    const pts = [...POS, CASTLE];
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0] * 4 + ' ' + p[1] * 5.2).join(' ');
+    let html = `<svg class="path-line" viewBox="0 0 400 520" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="#efe2d8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 22"/></svg>`;
+    tasks.forEach((t, i) => {
+      const [x, y] = POS[i];
+      const st = t.done ? 'done' : t === cur ? 'current' : 'todo';
+      html += `<button class="node ${st}" type="button" data-id="${t.id}" style="left:${x}%;top:${y * 5.2}px;--c:var(${t.c});--cd:var(${t.cd});--tint:var(${t.c})" aria-label="${t.label}">${ICON[t.id]}</button>`;
+      html += `<div class="node-label" style="left:${x}%;top:${y * 5.2 + 50}px">${t.label}<small>${t.done ? 'できた' : t.min + '分'}</small></div>`;
+      if (t === cur) html += `<div class="tip" style="left:calc(${x}% + 62px);top:${y * 5.2}px">ここから！</div>`;
+    });
+    const allDone = !cur;
+    html += `<button class="node castle${allDone ? '' : ' locked'}" type="button" data-id="castle" style="left:${CASTLE[0]}%;top:${CASTLE[1] * 5.2}px" aria-label="今日の城">${ICON.castle}</button>`;
+    html += `<div class="node-label" style="left:${CASTLE[0]}%;top:${CASTLE[1] * 5.2 + 58}px">今日の城<small>${allDone ? '完成！' : 'ぜんぶ終わると完成'}</small></div>`;
+    $('#path').innerHTML = html;
+  };
+
+  const openSheet = t => {
+    open = t;
+    const sheet = $('#sheet');
+    sheet.style.setProperty('--c', `var(${t.c})`);
+    sheet.style.setProperty('--cd', `var(${t.cd})`);
+    $('#sheetIcon').innerHTML = ICON[t.id];
+    $('#sheetTitle').textContent = t.label;
+    $('#sheetFirst').textContent = 'まず：' + t.first;
+    $('#sheetGoal').textContent = `目安 ${t.min}分`;
+    $('#sheetSteps').innerHTML = t.steps.map((s, i) => `<li><span>${i + 1}</span>${s}</li>`).join('');
+    $('#appBtn').style.display = t.app ? '' : 'none';
+    $('.sheet-row').style.gridTemplateColumns = t.app ? '1fr 1fr' : '1fr';
+    tickSheet();
+    $('#scrim').classList.add('show'); sheet.classList.add('show');
+  };
+  const closeSheet = () => { $('#scrim').classList.remove('show'); $('#sheet').classList.remove('show'); open = null; };
+  const secsOf = t => t.secs + (running === t ? (Date.now() - startAt) / 1000 : 0);
+  const tickSheet = () => {
+    if (!open) return;
+    const s = secsOf(open);
+    $('#sheetTime').textContent = clock(s);
+    $('#sheetBar').style.width = Math.min(100, s / (open.min * 60) * 100) + '%';
+    $('#startBtn').textContent = running === open ? '■ ストップ' : open.done ? '▶ もう少しやる' : '▶ はじめる';
+  };
+
+  const confetti = () => {
+    const colors = ['#ff8a3d', '#3ccf8e', '#ff6b98', '#4aa8ff', '#ffc23d'];
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('i');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[i % colors.length];
+      c.style.setProperty('--x', (Math.random() - .5) * 200 + 'px');
+      c.style.setProperty('--r', (Math.random() * 900 - 450) + 'deg');
+      c.style.setProperty('--t', (1.6 + Math.random() * 1.4) + 's');
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3200);
+    }
+  };
+
+  $('#path').addEventListener('click', e => {
+    const b = e.target.closest('.node');
+    if (!b) return;
+    if (b.dataset.id === 'castle') {
+      say(tasks.every(t => t.done) ? '城、完成してる…！！ 今日のあなた、伝説すぎる！！' : 'あと少しで城が完成するよ！ 光ってる丸から行こう！', tasks.every(t => t.done));
+      return;
+    }
+    openSheet(tasks.find(t => t.id === b.dataset.id));
+  });
+  $('#scrim').addEventListener('click', closeSheet);
+  $('#startBtn').addEventListener('click', () => {
+    if (running === open) { open.secs = secsOf(open); running = null; say(`${Math.max(1, Math.round(open.secs / 60))}分も積んだの！？ えらすぎる…！`, true); }
+    else { if (running) running.secs = secsOf(running); running = open; startAt = Date.now(); say(`よーい、どん！！ 「${open.label}」、見てるからね…！`); }
+    tickSheet(); render();
+  });
+  $('#appBtn').addEventListener('click', () => say('いってらっしゃい！ 時間はこっちで測っておくね！'));
+  $('#doneBtn').addEventListener('click', () => {
+    const t = open;
+    if (running === t) { t.secs = secsOf(t); running = null; }
+    t.done = true;
+    closeSheet();
+    render();
+    const n = tasks.filter(x => x.done).length;
+    if (n === tasks.length) { say('全部！？！？ ぜんぶ！？ 城、完成しちゃった！！', true); confetti(); }
+    else say(n === 2 ? '2つ目！？ え、正気？？ 天才では？' : `え、もう「${t.label}」できたの！？`, true);
+  });
+  setInterval(() => {
+    tickSheet();
+    if (running) $('#totalTime').textContent = `${Math.floor((tasks.reduce((a, t) => a + t.secs, 0) + (Date.now() - startAt) / 1000) / 60)}分`;
+  }, 1000);
+  render();
+})();
+</script>
+</body>
+</html>

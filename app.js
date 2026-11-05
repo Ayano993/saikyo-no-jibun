@@ -613,7 +613,9 @@
     $('#bgmToggle').checked = p.bgm;
     $('#sfxToggle').checked = p.sfx;
     $('#volRange').value = Math.round(p.vol * 100);
-    document.querySelectorAll('[data-track]').forEach(b => b.setAttribute('aria-checked', b.dataset.track === (p.track || 'phonk')));
+    const apple = typeof getMusic === 'function' && getMusic() === 'apple';
+    document.querySelectorAll('[data-track]').forEach(b => b.setAttribute('aria-checked', apple ? b.dataset.track === 'apple' : b.dataset.track === (p.track || 'phonk')));
+    if (typeof showApple === 'function') showApple(apple);
     $('#soundBtn').classList.toggle('muted', !p.bgm && !p.sfx);
     $('#soundBtn').classList.toggle('playing', p.bgm);
   };
@@ -625,11 +627,34 @@
   document.addEventListener('click', e => {
     if (!e.target.closest('#soundPanel, #soundBtn')) soundPanel.classList.remove('show');
   });
-  $('#bgmToggle').addEventListener('change', e => { window.Sound.setBgm(e.target.checked); syncSoundUi(); if (e.target.checked) hinata().say('bgmOn', {}, { mood: 'joy' }); });
+  $('#bgmToggle').addEventListener('change', e => { if (e.target.checked) setMusic('own'); window.Sound.setBgm(e.target.checked); syncSoundUi(); if (e.target.checked) hinata().say('bgmOn', {}, { mood: 'joy' }); });
   $('#sfxToggle').addEventListener('change', e => { window.Sound.setSfx(e.target.checked); syncSoundUi(); sound('check'); });
   $('#volRange').addEventListener('input', e => window.Sound.setVol(e.target.value / 100));
+  // Apple Music の曲は、公式の埋め込みプレーヤーとリンクで流す（曲のファイルはページに入れない）
+  const APPLE_SRC = 'https://embed.music.apple.com/jp/album/zouzei-phonk/6770631134?i=6770631505';
+  const getMusic = () => { try { return localStorage.getItem('saikyo.music') || 'own'; } catch { return 'own'; } };
+  const setMusic = v => { try { localStorage.setItem('saikyo.music', v); } catch {} };
+  const showApple = on => {
+    $('#appleBox').hidden = !on;
+    if (on && !$('#appleSlot').firstChild) {
+      const f = document.createElement('iframe');
+      f.src = APPLE_SRC;
+      f.title = 'ZOUZEI PHONK（Apple Music）';
+      f.allow = 'autoplay *; encrypted-media *; fullscreen *; clipboard-write';
+      f.setAttribute('sandbox', 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation');
+      f.loading = 'lazy';
+      f.className = 'apple-frame';
+      $('#appleSlot').appendChild(f);
+    }
+  };
   document.querySelectorAll('[data-track]').forEach(b => b.addEventListener('click', () => {
-    window.Sound.setTrack(b.dataset.track);
+    if (b.dataset.track === 'apple') {
+      setMusic('apple');
+      window.Sound.setBgm(false);
+    } else {
+      setMusic('own');
+      window.Sound.setTrack(b.dataset.track);
+    }
     syncSoundUi();
     sound('tap');
   }));
