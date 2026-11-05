@@ -1,6 +1,6 @@
 // 画面の部品は手元に置いて速く開き、ニュースは毎回取りに行く
-const CACHE = 'saikyo-v4';
-const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'quotes.js', 'buddy.js', 'audio.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png'];
+const CACHE = 'saikyo-v5';
+const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'quotes.js', 'audio.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
