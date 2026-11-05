@@ -293,8 +293,8 @@
     if (!t) {
       box.className = 'focus empty';
       box.innerHTML = `
-        <p class="focus-kicker">NOW · 今すぐの一手</p>
-        <h3 class="focus-title">今日の一手、どれにする？</h3>
+        <p class="focus-kicker">今すぐの一手</p>
+        <h3 class="focus-title">今日の一手を選ぶ</h3>
         <div class="focus-chips">${day.tasks.map(x => `<button type="button" data-pick="${x.id}"><i class="hue-${planFor(x.label).hue}">${esc(planFor(x.label).icon)}</i>${esc(x.label)}</button>`).join('')}</div>`;
       return;
     }
@@ -302,7 +302,7 @@
     const on = running() && running().id === t.id;
     box.className = `focus${t.done ? ' done' : ''}${on ? ' live' : ''}`;
     box.innerHTML = `
-      <p class="focus-kicker">NOW · 今すぐの一手</p>
+      <p class="focus-kicker">今すぐの一手</p>
       <div class="focus-head">
         <span class="focus-icon hue-${plan.hue}">${esc(plan.icon)}</span>
         <div>
@@ -424,7 +424,7 @@
     $('#statStones').textContent = stones;
     $('#statStreak').textContent = streakOf();
     $('#statWeek').textContent = week;
-    $('#weekTime').textContent = weekSecs >= 60 ? minutesJa(weekSecs) : '0分';
+    $('#weekTime').textContent = minutesJa(weekSecs);
   };
 
   const renderHistory = () => {
@@ -613,6 +613,7 @@
     $('#bgmToggle').checked = p.bgm;
     $('#sfxToggle').checked = p.sfx;
     $('#volRange').value = Math.round(p.vol * 100);
+    document.querySelectorAll('[data-track]').forEach(b => b.setAttribute('aria-checked', b.dataset.track === (p.track || 'phonk')));
     $('#soundBtn').classList.toggle('muted', !p.bgm && !p.sfx);
     $('#soundBtn').classList.toggle('playing', p.bgm);
   };
@@ -627,6 +628,11 @@
   $('#bgmToggle').addEventListener('change', e => { window.Sound.setBgm(e.target.checked); syncSoundUi(); if (e.target.checked) hinata().say('bgmOn', {}, { mood: 'joy' }); });
   $('#sfxToggle').addEventListener('change', e => { window.Sound.setSfx(e.target.checked); syncSoundUi(); sound('check'); });
   $('#volRange').addEventListener('input', e => window.Sound.setVol(e.target.value / 100));
+  document.querySelectorAll('[data-track]').forEach(b => b.addEventListener('click', () => {
+    window.Sound.setTrack(b.dataset.track);
+    syncSoundUi();
+    sound('tap');
+  }));
   syncSoundUi();
 
   // ---------- TOEIC ----------
@@ -653,7 +659,7 @@
 
   // ---------- ニュース ----------
   const CAT = { game: 'ゲーム', ent: 'エンタメ', europe: 'ヨーロッパ' };
-  const LANG = { it: 'ITALIANO', en: 'ENGLISH' };
+  const LANG = { it: 'イタリア語', en: '英語' };
   let currentFilter = 'all';
   const applyFilter = () => {
     document.querySelectorAll('.news-item').forEach(li => li.classList.toggle('hide', currentFilter !== 'all' && li.dataset.cat !== currentFilter));

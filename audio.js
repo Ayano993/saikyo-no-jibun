@@ -4,12 +4,12 @@
 
   const PREF_KEY = 'saikyo.sound';
   const prefs = (() => {
-    try { return { bgm: false, sfx: true, vol: .7, ...JSON.parse(localStorage.getItem(PREF_KEY)) }; }
-    catch { return { bgm: false, sfx: true, vol: .7 }; }
+    try { return { bgm: false, sfx: true, vol: .7, track: 'phonk', ...JSON.parse(localStorage.getItem(PREF_KEY)) }; }
+    catch { return { bgm: false, sfx: true, vol: .7, track: 'phonk' }; }
   })();
   const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch {} };
 
-  let ctx = null, master, bgmBus, sfxBus, delay, noiseBuf;
+  let ctx = null, master, bgmBus, sfxBus, delay, noiseBuf, drive;
 
   const init = () => {
     if (ctx) return ctx;
@@ -23,7 +23,14 @@
     bgmBus = ctx.createGain(); bgmBus.gain.value = 0; bgmBus.connect(master);
     sfxBus = ctx.createGain(); sfxBus.gain.value = .9; sfxBus.connect(master);
     // BGM のつぶ立ちに少しだけ残響（ディレイ）
-    delay = ctx.createDelay(1); delay.delayTime.value = 60 / BPM * .75;
+    delay = ctx.createDelay(1); delay.delayTime.value = 60 / TRACKS[prefs.track].bpm * .75;
+    // 808 とカウベルを少し歪ませる
+    drive = ctx.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 3.2); }
+    drive.curve = curve;
+    const driveOut = ctx.createGain(); driveOut.gain.value = .7;
+    drive.connect(driveOut).connect(bgmBus);
     const fb = ctx.createGain(); fb.gain.value = .28;
     const dl = ctx.createGain(); dl.gain.value = .32;
     delay.connect(fb).connect(delay); delay.connect(dl).connect(bgmBus);
@@ -65,9 +72,7 @@
     s.start(t); s.stop(t + dur + .02);
   };
 
-  // ---------- BGM（自作の明るいループ。D メジャー、I–V–vi–IV） ----------
-  const BPM = 104;
-  const STEP = 60 / BPM / 4;
+  // ---------- BGM 1: 朝焼けポップ（D メジャー、I–V–vi–IV） ----------
   const CHORDS = [
     { root: 38, notes: [62, 66, 69] },  // D
     { root: 33, notes: [61, 64, 69] },  // A
@@ -81,9 +86,7 @@
     [74, null, 76, null, 78, null, 81, null, 78, null, 76, null, 74, null, null, null],
     [71, null, 74, null, 74, null, 76, null, 74, null, null, null, null, null, null, null],
   ];
-  let step = 0, nextT = 0, sched = null;
-
-  const scheduleStep = (s, t) => {
+  const sunriseStep = (s, t, STEP) => {
     const bar = Math.floor(s / 16) % 32;
     const pos = s % 16;
     const ch = CHORDS[bar % 4];
@@ -107,15 +110,95 @@
       if (m) tone(bgmBus, { midi: m, t, dur: STEP * 3, type: 'square', gain: .028, cutoff: 2600, send: .5 });
     }
   };
+
+  // ---------- BGM 2: フォンク（D マイナー。カウベル、歪んだ 808、細かいハイハット） ----------
+  const PH_ROOTS = [38, 34, 36, 33];               // Dm – B♭ – C – A
+  const PH_PADS = [[62, 65, 69], [62, 65, 70], [64, 67, 72], [61, 64, 69]];
+  const _ = null;
+  const PH_BELL = [
+    [74, _, _, 74, _, _, 77, _, 74, _, _, 74, _, 79, 77, _],
+    [81, _, _, 79, _, _, 77, _, 76, _, _, 74, _, 76, _, _],
+    [74, _, _, 74, _, _, 77, _, 74, _, _, 74, _, 79, 77, _],
+    [74, _, 77, _, 79, _, 81, _, 82, _, 81, _, 79, _, 77, _],
+  ];
+  const cowbell = (midi, t, gain = .07) => {
+    const f = hz(midi);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f * 1.25; bp.Q.value = 1.2;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gain, t + .003);
+    g.gain.exponentialRampToValueAtTime(gain * .35, t + .04);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .32);
+    [f, f * 1.4836].forEach(fr => {
+      const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = fr;
+      o.connect(bp); o.start(t); o.stop(t + .36);
+    });
+    bp.connect(g); g.connect(drive);
+    const s = ctx.createGain(); s.gain.value = .45; g.connect(s).connect(delay);
+  };
+  const bass808 = (midi, t, dur, slideTo) => {
+    const o = ctx.createOscillator(); o.type = 'sine';
+    const f = hz(midi);
+    o.frequency.setValueAtTime(f * 1.9, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + .03);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(hz(slideTo), t + dur * .9);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.55, t + .005);
+    g.gain.setTargetAtTime(.32, t + .05, .12);
+    g.gain.setTargetAtTime(.0001, t + dur, .04);
+    o.connect(g).connect(drive);
+    o.start(t); o.stop(t + dur + .3);
+  };
+  const phonkStep = (s, t, STEP) => {
+    const bar = Math.floor(s / 16) % 16;
+    const pos = s % 16;
+    const ci = bar % 4;
+    const intro = bar < 2;
+    const brk = bar >= 14;
+    const full = !intro && !brk;
+    if (pos === 0) PH_PADS[ci].forEach(n => tone(bgmBus, { midi: n - 12, t, dur: STEP * 16, type: 'sawtooth', gain: .014, attack: .3, cutoff: 900 }));
+    const bell = PH_BELL[bar % 4][pos];
+    if (bell) cowbell(bell, t, intro ? .05 : .07);
+    // ハイハット（8分。2小節ごとに 32 分の連打）
+    if (pos % 2 === 0) noise(bgmBus, { t, dur: .035, gain: intro ? .03 : .05, freq: 8000 });
+    if (!intro && bar % 2 === 1 && pos >= 12) {
+      noise(bgmBus, { t: t + STEP / 2, dur: .025, gain: .035, freq: 9000 });
+    }
+    if (full) {
+      const kicks = bar % 4 === 3 ? [0, 7, 10, 14] : [0, 7, 10];
+      if (kicks.includes(pos)) {
+        tone(bgmBus, { f: 160, glideTo: 50, t, dur: .09, type: 'sine', gain: .55 });
+        const next = kicks.find(k => k > pos) ?? 16;
+        const slide = bar % 4 === 3 && pos === 10 ? PH_ROOTS[ci] + 12 : null;
+        bass808(PH_ROOTS[ci] + (pos === 7 ? 0 : 0), t, STEP * (next - pos) * .95, slide);
+      }
+    }
+    if ((full || brk) && (pos === 4 || pos === 12)) {
+      noise(bgmBus, { t, dur: .16, gain: .13, type: 'bandpass', freq: 1500, q: .7 });
+      noise(bgmBus, { t: t + .012, dur: .1, gain: .07, type: 'bandpass', freq: 2400, q: .9 });
+    }
+  };
+
+  const TRACKS = {
+    phonk: { bpm: 132, step: phonkStep, gain: .5 },
+    sunrise: { bpm: 104, step: sunriseStep, gain: .55 },
+  };
+  let step = 0, nextT = 0, sched = null, cur = TRACKS[prefs.track] ? prefs.track : 'phonk';
+
   const tick = () => {
-    while (nextT < ctx.currentTime + .12) { scheduleStep(step, nextT); step++; nextT += STEP; }
+    const tr = TRACKS[cur];
+    const STEP = 60 / tr.bpm / 4;
+    while (nextT < ctx.currentTime + .12) { tr.step(step, nextT, STEP); step++; nextT += STEP; }
   };
   const bgmStart = () => {
     if (!init() || sched) return;
+    cur = TRACKS[prefs.track] ? prefs.track : 'phonk';
+    delay.delayTime.setValueAtTime(60 / TRACKS[cur].bpm * .75, ctx.currentTime);
     step = 0; nextT = ctx.currentTime + .08;
     sched = setInterval(tick, 25);
     bgmBus.gain.cancelScheduledValues(ctx.currentTime);
-    bgmBus.gain.setTargetAtTime(.55, ctx.currentTime, .6);
+    bgmBus.gain.setTargetAtTime(TRACKS[cur].gain, ctx.currentTime, .6);
   };
   const bgmStop = () => {
     if (!ctx || !sched) return;
@@ -127,8 +210,8 @@
     if (!ctx || !sched) return;
     const t = ctx.currentTime;
     bgmBus.gain.cancelScheduledValues(t);
-    bgmBus.gain.setTargetAtTime(.22, t, .05);
-    bgmBus.gain.setTargetAtTime(.55, t + secs, .4);
+    bgmBus.gain.setTargetAtTime(.2, t, .05);
+    bgmBus.gain.setTargetAtTime(TRACKS[cur].gain, t + secs, .4);
   };
 
   // ---------- 効果音 ----------
@@ -193,6 +276,11 @@
     sfx,
     setBgm(on) { prefs.bgm = on; savePrefs(); unlock(); on ? bgmStart() : bgmStop(); },
     setSfx(on) { prefs.sfx = on; savePrefs(); },
+    setTrack(name) {
+      if (!TRACKS[name]) return;
+      prefs.track = name; savePrefs();
+      if (sched) { clearInterval(sched); sched = null; bgmStart(); }
+    },
     setVol(v) { prefs.vol = v; savePrefs(); if (master) master.gain.setTargetAtTime(v, ctx.currentTime, .05); },
     get playing() { return !!sched; },
   };
