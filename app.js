@@ -647,6 +647,19 @@
       $('#appleSlot').appendChild(f);
     }
   };
+  // ミュージックアプリで直接開く（ページ内のプレーヤーは iPhone だと鳴らないことがある）
+  $('.apple-open').addEventListener('click', e => {
+    e.preventDefault();
+    const web = e.currentTarget.href;
+    let left = false;
+    const onHide = () => { if (document.hidden) left = true; };
+    document.addEventListener('visibilitychange', onHide);
+    window.location.href = 'music://music.apple.com/jp/album/zouzei-phonk/6770631134?i=6770631505';
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      if (!left) window.open(web, '_blank', 'noopener');
+    }, 1500);
+  });
   document.querySelectorAll('[data-track]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.track === 'apple') {
       setMusic('apple');

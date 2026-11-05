@@ -65,7 +65,7 @@
 
   /* ---------- 城のバナー（積むほど育つ） ---------- */
   .banner {
-    position: relative; margin-top: 16px; height: 168px; border-radius: 24px; overflow: hidden;
+    position: relative; margin-top: 16px; height: 196px; border-radius: 24px; overflow: hidden;
     background: linear-gradient(180deg, #5b2a7a 0%, #c9457a 40%, #ff8a4c 70%, #ffd27a 100%);
     color: #fff;
     box-shadow: 0 6px 0 #e3c6ae;
@@ -73,8 +73,10 @@
   .banner > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .banner-text { position: absolute; left: 18px; top: 16px; right: 44%; }
   .banner-date { font-size: 13px; font-weight: 700; opacity: .95; }
-  .banner-level { margin: 2px 0 0; font-size: 28px; font-weight: 800; line-height: 1.2; text-shadow: 0 2px 10px rgba(80, 10, 40, .35); }
+  .banner-level { margin: 2px 0 0; font-size: 26px; font-weight: 800; line-height: 1.2; text-shadow: 0 2px 10px rgba(80, 10, 40, .35); }
   .banner-next { margin: 4px 0 0; font-size: 13px; font-weight: 700; line-height: 1.4; }
+  .banner-rank { display: inline-block; margin-top: 4px; padding: 1px 10px; border-radius: 99px; background: rgba(255, 255, 255, .22); font-size: 13px; font-weight: 800; }
+  .banner-goal { position: absolute; left: 18px; bottom: 40px; font-size: 11px; font-weight: 800; opacity: .9; }
   .lv-bar { position: absolute; left: 18px; right: 18px; bottom: 16px; height: 18px; border-radius: 99px; background: rgba(60, 10, 40, .35); overflow: hidden; }
   .lv-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(180deg, #fff3c4, #ffc23d); transition: width .9s cubic-bezier(.2, .8, .2, 1); position: relative; }
   .lv-bar i::after { content: ""; position: absolute; left: 8px; right: 8px; top: 3px; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .6); }
@@ -242,6 +244,18 @@
   .sheet-actions { display: grid; gap: 12px; margin-top: 20px; }
   .sheet-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
+  /* ---------- BGM シート ---------- */
+  .sheet.music h3 { font-size: 20px; margin-bottom: 12px; }
+  .m-list { display: grid; gap: 10px; }
+  .m-row { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 16px; border: 2px solid var(--line); background: var(--card); box-shadow: 0 3px 0 var(--line); }
+  .m-row b { display: block; font-size: 16px; }
+  .m-row small { display: block; font-size: 12px; color: var(--ink-2); font-weight: 700; }
+  .m-ico { width: 48px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--c); box-shadow: 0 3px 0 var(--cd); color: #fff; font-weight: 800; font-size: 20px; }
+  .m-state { font-style: normal; font-weight: 800; color: var(--ink-3); }
+  .m-row.on { border-color: var(--orange); background: var(--orange-l); }
+  .m-row.on .m-state::before { content: "再生中"; color: var(--orange-d); font-size: 13px; }
+  .m-note { margin: 12px 0 14px; font-size: 13px; color: var(--ink-2); font-weight: 700; line-height: 1.6; }
+
   /* ---------- やりきった画面 ---------- */
   .result {
     position: fixed; inset: 0; z-index: 60;
@@ -330,9 +344,10 @@
     </svg>
     <div class="banner-text">
       <div class="banner-date">11月5日（木）</div>
-      <p class="banner-level" id="lvTitle">城レベル 2</p>
+      <p class="banner-level" id="lvTitle">天才レベル 2</p>
       <p class="banner-next" id="lvNext"></p>
     </div>
+    <div class="banner-goal">めざすは、最強の自分</div>
     <div class="lv-bar"><i id="lvBar"></i><span id="lvNum"></span></div>
   </div>
 
@@ -392,6 +407,18 @@
   </div>
 </section>
 
+<section class="sheet music" id="musicSheet" aria-modal="true" role="dialog" aria-labelledby="musicTitle">
+  <div class="grab"></div>
+  <h3 id="musicTitle">BGM</h3>
+  <div class="m-list">
+    <button class="m-row" type="button" data-music="phonk"><span class="m-ico" style="--c:var(--violet);--cd:var(--violet-d)">♪</span><span><b>オリジナル・フォンク</b><small>このページで鳴る自作の曲</small></span><i class="m-state"></i></button>
+    <button class="m-row" type="button" data-music="sunrise"><span class="m-ico" style="--c:var(--orange);--cd:var(--orange-d)">♪</span><span><b>朝焼けポップ</b><small>このページで鳴る自作の曲</small></span><i class="m-state"></i></button>
+    <button class="m-row" type="button" data-music="zouzei"><span class="m-ico" style="--c:var(--pink);--cd:var(--pink-d)">♪</span><span><b>ZOUZEI PHONK</b><small>SYENSAN ・ ミュージックアプリで流す</small></span><i class="m-state">↗</i></button>
+  </div>
+  <p class="m-note">ZOUZEI PHONK は、ミュージックアプリが開いて再生されます。リピートにしてからこの画面に戻れば、流したまま使えます。</p>
+  <button class="btn ghost" type="button" id="musicStop">音楽を止める</button>
+</section>
+
 <section class="result" id="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
   <svg class="result-hinata" viewBox="0 0 120 120" aria-hidden="true" id="resultHinata"></svg>
   <h2 id="resultTitle"></h2>
@@ -436,7 +463,7 @@
   // デモ用の数字（本番では端末に保存した記録から計算する）
   const S = { stones: 110, streak: 3, week: [true, true, true, false, false, false, false], todayIdx: 3, timerUsed: false, chestOpened: false };
   const LEVELS = [0, 0, 50, 120, 220, 350]; // 添字がレベル（1=土台 … 5=旗）
-  const PART = ['', '土台', '壁', '塔', '天守', '旗'];
+  const RANK = ['', 'はじめの一歩', '努力家', '秀才', '天才', '最強の自分'];
   const tasks = [
     { id: 'duo', label: 'Duolingo', c: '--green', cd: '--green-d', min: 10, first: 'アプリを開いて、レッスンを1つ', steps: ['アプリを開く', '今日のレッスンを1つ（約5分）', '余力があれば、もう1つか復習を1つ'], app: true, done: true, secs: 600 },
     { id: 'piano', label: 'ピアノ', c: '--pink', cd: '--pink-d', min: 15, first: '鍵盤のふたを開けて、音階を3分', steps: ['指ならし：音階かハノンを3分', 'いまの曲を2小節ずつ、ゆっくり8分', '最後に、止まらず通して1回'], pick: true, done: false, secs: 0 },
@@ -466,15 +493,15 @@
   const renderCastle = () => {
     const lv = levelOf(S.stones);
     document.querySelectorAll('#castleArt .part').forEach(p => p.classList.toggle('on', +p.dataset.lv <= lv));
-    $('#lvTitle').textContent = `城レベル ${lv}`;
+    $('#lvTitle').innerHTML = `天才レベル ${lv}<br><span class="banner-rank">${RANK[lv]}</span>`;
     const next = LEVELS[lv + 1];
     if (next) {
       const prev = LEVELS[lv];
-      $('#lvNext').textContent = `あと${next - S.stones}石で、${PART[lv + 1]}が建つ`;
+      $('#lvNext').textContent = `あと${next - S.stones}石で「${RANK[lv + 1]}」`;
       $('#lvBar').style.width = ((S.stones - prev) / (next - prev) * 100) + '%';
       $('#lvNum').textContent = `${S.stones} / ${next}`;
     } else {
-      $('#lvNext').textContent = '城が完成しました';
+      $('#lvNext').textContent = '最強の自分に、なった。';
       $('#lvBar').style.width = '100%';
       $('#lvNum').textContent = S.stones;
     }
@@ -665,7 +692,7 @@
     const n = tasks.filter(x => x.done).length;
     setTimeout(() => {
       const lv = levelOf(S.stones);
-      if (levelUp) showResult({ title: `城レベル ${lv}！`, lead: `${PART[lv]}が建った…！ え、こんなに積めたの？ 正気！？`, gain, big: true });
+      if (levelUp) showResult({ title: `天才レベル ${lv}！`, lead: lv === 5 ? 'ついに「最強の自分」に…！ え、正気！？ 伝説だよ！！' : `「${RANK[lv]}」になった…！ え、こんなに積めたの？ 正気！？`, gain, big: true });
       else if (n === tasks.length) showResult({ title: '今日の城、完成！', lead: '全部やりきった…！ 今日のあなた、伝説すぎる', gain, big: true });
       else if (t.pick) showResult({ title: '今日の一手、やりきった！', lead: '有言実行の人だ…！ 城の人たちがざわついてます', gain, big: true });
       else showResult({ title: firstToday ? '今日の炎、点灯！' : `${t.label}、できた！`, lead: n === 2 ? '2つ目！？ え、正気？？ 天才では？' : 'その一歩が、城の石になる！', gain });
@@ -678,17 +705,52 @@
     renderAll();
     showResult({ title: '宝箱をあけた！', lead: 'クエスト全部クリア…！ 今日のあなた、止まらない！', gain: 20, big: true });
   });
-  $('#musicBtn').addEventListener('click', () => {
+  // ---------- BGM ----------
+  // ZOUZEI PHONK はミュージックアプリで再生する（曲のファイルはページに入れない）
+  const ZOUZEI_APP = 'music://music.apple.com/jp/album/zouzei-phonk/6770631134?i=6770631505';
+  const ZOUZEI_WEB = 'https://music.apple.com/jp/album/zouzei-phonk/6770631134?i=6770631505';
+  let ownTrack = null;
+  const syncMusic = () => {
+    document.querySelectorAll('[data-music]').forEach(b => b.classList.toggle('on', b.dataset.music === ownTrack));
+    $('#musicBtn').classList.toggle('on', !!ownTrack);
+    $('#musicBtn').setAttribute('aria-pressed', !!ownTrack);
+  };
+  const openMusic = () => { $('#scrim').classList.add('show'); $('#musicSheet').classList.add('show'); syncMusic(); sfx('tap'); };
+  const closeMusic = () => { $('#musicSheet').classList.remove('show'); if (!open) $('#scrim').classList.remove('show'); };
+  $('#musicBtn').addEventListener('click', openMusic);
+  $('#scrim').addEventListener('click', closeMusic);
+  const playOwn = name => {
     if (!window.Sound) return;
-    const on = !window.Sound.playing;
-    window.Sound.setTrack('phonk');
-    window.Sound.setBgm(on);
-    $('#musicBtn').classList.toggle('on', on);
-    $('#musicBtn').setAttribute('aria-pressed', on);
-    say(on ? 'フォンク、スタート！ 気合、入ってきた〜！' : '音楽ストップ！ 集中モードだね！');
+    window.Sound.setTrack(name);
+    window.Sound.setBgm(true);
+    ownTrack = name;
+    syncMusic();
+  };
+  const stopOwn = () => { if (window.Sound) window.Sound.setBgm(false); ownTrack = null; syncMusic(); };
+  $('#musicSheet').addEventListener('click', e => {
+    const b = e.target.closest('[data-music]');
+    if (!b) return;
+    const m = b.dataset.music;
+    if (m === 'zouzei') {
+      stopOwn();
+      closeMusic();
+      say('ZOUZEI PHONK、いってらっしゃい！ リピートにして戻ってきてね！');
+      let left = false;
+      const onHide = () => { if (document.hidden) left = true; };
+      document.addEventListener('visibilitychange', onHide);
+      window.location.href = ZOUZEI_APP;
+      setTimeout(() => {
+        document.removeEventListener('visibilitychange', onHide);
+        if (!left) window.open(ZOUZEI_WEB, '_blank', 'noopener');
+      }, 1500);
+      return;
+    }
+    if (ownTrack === m) { stopOwn(); say('音楽ストップ！ 集中モードだね！'); }
+    else { playOwn(m); say(m === 'phonk' ? 'フォンク、スタート！ 気合、入ってきた〜！' : '朝焼けポップ、スタート！ 今日も登ろう！'); }
   });
+  $('#musicStop').addEventListener('click', () => { stopOwn(); closeMusic(); });
   $('#statStreak').addEventListener('click', () => say(`<b>${S.streak}日</b>連続！ 炎を絶やさないで…！`, true));
-  $('#statStones').addEventListener('click', () => say(`いま<b>${S.stones}石</b>。積むほど城が育つよ！`));
+  $('#statStones').addEventListener('click', () => say(`いま<b>${S.stones}石</b>。積むほど天才レベルが上がって、最後は<b>最強の自分</b>！`));
 
   setInterval(() => {
     tickSheet();
