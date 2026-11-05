@@ -687,12 +687,14 @@
   const TRACK_NAME = { phonk: 'オリジナル・フォンク', sunrise: '朝焼けポップ' };
   const syncMusic = () => {
     const S = window.Sound;
-    const playing = S && S.prefs.bgm;
-    const tr = S ? S.prefs.track : null;
+    const ext = S && S.external;
+    const playing = S && (S.prefs.bgm || ext);
+    const tr = ext ? 'zouzei' : S ? S.prefs.track : null;
     $$('[data-music]').forEach(b => b.classList.toggle('on', !!playing && b.dataset.music === tr));
     $('#musicBtn').classList.toggle('on', !!playing);
     $('#musicBtn').setAttribute('aria-pressed', !!playing);
-    if (S) { $('#sfxToggle').checked = S.prefs.sfx; $('#volRange').value = Math.round(S.prefs.vol * 100); }
+    $('#extNote').hidden = !ext;
+    if (S) { $('#sfxToggle').checked = S.prefs.sfx && !ext; $('#sfxToggle').disabled = !!ext; $('#volRange').value = Math.round(S.prefs.vol * 100); }
   };
   $('#musicBtn').addEventListener('click', () => { syncMusic(); openSheet($('#musicSheet')); sfx('tap'); });
   $('#musicSheet').addEventListener('click', e => {
@@ -700,7 +702,7 @@
     if (!b || !window.Sound) return;
     const m = b.dataset.music;
     if (m === 'zouzei') {
-      window.Sound.setBgm(false);
+      window.Sound.setExternal(true);
       syncMusic(); closeSheets();
       say('zouzei');
       openOutside(ZOUZEI_APP, ZOUZEI_WEB);
@@ -710,7 +712,10 @@
     else { window.Sound.setTrack(m); window.Sound.setBgm(true); say('music', { t: TRACK_NAME[m] }); }
     syncMusic();
   });
-  $('#musicStop').addEventListener('click', () => { if (window.Sound) window.Sound.setBgm(false); syncMusic(); closeSheets(); });
+  $('#musicStop').addEventListener('click', () => {
+    if (window.Sound) { window.Sound.setBgm(false); if (window.Sound.external) window.Sound.setExternal(false); }
+    syncMusic(); closeSheets();
+  });
   $('#sfxToggle').addEventListener('change', e => { window.Sound.setSfx(e.target.checked); sfx('check'); });
   $('#volRange').addEventListener('input', e => window.Sound.setVol(e.target.value / 100));
 

@@ -652,3 +652,5 @@ a { color: inherit; }
 .ms:not(.done) .ms-act:not(:empty) { font-size: 15px; }
 .ms[data-ms] .ms-act { color: var(--ink-2); }
 .ms:not(.done)[data-ms="apply"] .ms-act, .ms:not(.done)[data-ms="base"] .ms-act, .ms:not(.done)[data-ms="check"] .ms-act, .ms:not(.done)[data-ms="mock3"] .ms-act, .ms:not(.done)[data-ms="review"] .ms-act, .ms:not(.done)[data-ms="exam"] .ms-act { color: var(--gray-d); font-size: 20px; }
+
+.ext-note { padding: 10px 12px; border-radius: 12px; background: #ffe8ef; color: var(--pink-d); }

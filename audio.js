@@ -16,7 +16,7 @@
   // ミュージックアプリの曲を止めない。自作 BGM を流すときだけ「再生（playback）」にする。
   // ホーム画面から開いたときは、こうしないと効果音がミュージックアプリを止めてしまう。
   const setSession = type => { try { if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type; } catch {} };
-  setSession(prefs.bgm ? 'playback' : 'ambient');
+  setSession(prefs.bgm && !prefs.external ? 'playback' : 'ambient');
 
   // 音の通り道をつくる（ライブ用と書き出し用で共通）
   const build = () => {
@@ -43,6 +43,7 @@
     for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
   };
   const init = () => {
+    if (prefs.external) return null; // ほかのアプリで音楽を流しているあいだは、音の仕組みを作らない
     if (ctx) return ctx;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
@@ -310,7 +311,7 @@
     open: t => [69, 74, 78, 81].forEach((m, i) => tone(sfxBus, { midi: m, t: t + i * .11, dur: .6, type: 'sine', gain: .1 })),
   };
   const sfx = name => {
-    if (!prefs.sfx || !init() || ctx.state !== 'running') return;
+    if (prefs.external || !prefs.sfx || !init() || ctx.state !== 'running') return;
     const f = SFX[name];
     if (!f) return;
     if (name === 'fanfare' || name === 'goal') duck(1.6); else duck(.5);
@@ -320,7 +321,7 @@
   // iPhone は最初のタップで音を解放する必要がある
   let unlocked = false;
   const unlock = () => {
-    if (!init()) return;
+    if (prefs.external || !init()) return;
     if (ctx.state !== 'running') ctx.resume();
     if (!unlocked) {
       unlocked = true;
@@ -332,7 +333,7 @@
   };
   ['pointerdown', 'touchend', 'keydown'].forEach(ev => window.addEventListener(ev, unlock, { capture: true, passive: true }));
   document.addEventListener('visibilitychange', () => {
-    if (!ctx) return;
+    if (!ctx || prefs.external) return;
     if (document.hidden) ctx.suspend();
     else if (unlocked) ctx.resume();
   });
@@ -340,7 +341,26 @@
   window.Sound = {
     prefs,
     sfx,
-    setBgm(on) { prefs.bgm = on; savePrefs(); unlock(); on ? bgmStart() : bgmStop(); },
+    setBgm(on) {
+      if (on && prefs.external) prefs.external = false;
+      prefs.bgm = on; savePrefs(); unlock(); on ? bgmStart() : bgmStop();
+    },
+    // ミュージックアプリなど、ほかのアプリの音楽を流すとき：このページの音をすべて止めて、音の仕組みも閉じる
+    setExternal(on) {
+      prefs.external = on;
+      if (on) {
+        prefs.bgm = false;
+        wanted = false;
+        bgmEl.pause();
+        bgmEl.src = SILENT;
+        if (ctx) { const c = ctx; ctx = null; c.close().catch(() => {}); }
+        unlocked = false;
+        if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+      }
+      savePrefs();
+      setSession('ambient');
+    },
+    get external() { return !!prefs.external; },
     setSfx(on) { prefs.sfx = on; savePrefs(); },
     setTrack(name) {
       if (!TRACKS[name]) return;
