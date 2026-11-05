@@ -98,8 +98,9 @@
   <div class="section-title"><h2>今日の道</h2><span id="progress"></span></div>
   <div class="path" id="path"></div>
   <div class="path-tools">
-    <button class="btn ghost small" type="button" id="addBtn">＋ 一手を足す</button>
-    <button class="btn ghost small" type="button" id="yohakuBtn">余白の日にする</button>
+    <button class="btn ghost small" type="button" id="addBtn">＋ 足す</button>
+    <button class="btn ghost small" type="button" id="orderBtn">⇅ 順番</button>
+    <button class="btn ghost small" type="button" id="yohakuBtn">余白の日</button>
   </div>
 
   <div class="section-title"><h2>今日のクエスト</h2><span id="questCount"></span></div>
@@ -124,46 +125,52 @@
 <!-- ============ 挑戦 ============ -->
 <section class="view" id="view-goal" data-view="goal" hidden>
   <h1 class="view-title">挑戦</h1>
+  <p class="view-sub">最強の自分に向かって、いま積んでいる石</p>
 
-  <div class="section-title"><h2>今積んでいる石</h2><span>900への途中の石</span></div>
-  <div class="card toeic">
-    <div class="toeic-top">
-      <span class="toeic-tag">TOEIC L&amp;R 公開テスト</span>
-      <span class="toeic-date">2027年1月24日（日）</span>
+  <div class="hero-card toeic-hero">
+    <div class="th-top"><span class="pill">いま積んでいる石</span><span class="th-date">2027年1月24日（日）</span></div>
+    <h2 class="th-title">TOEIC L&amp;R 公開テスト</h2>
+    <div class="th-count"><b id="toeicDays">--</b><span>日後</span></div>
+    <div class="th-score">
+      <div class="ts-item"><small>いま</small><b>580</b></div>
+      <div class="ts-arrow">→</div>
+      <div class="ts-item goal"><small>目標</small><b>700</b></div>
+      <div class="ts-arrow">→</div>
+      <div class="ts-item dream"><small>その先</small><b>900</b></div>
     </div>
-    <div class="toeic-count"><span>試験まで</span><b id="toeicDays">--</b><span>日</span></div>
-    <div class="score">
-      <div class="score-bar"><i style="width:51%"></i></div>
-      <div class="score-pins">
-        <span style="left:31%"><b>580</b>いま</span>
-        <span class="goal" style="left:51%"><b>700</b>目標</span>
-        <span class="dream" style="left:85%"><b>900</b>その先</span>
-      </div>
-    </div>
+    <p class="th-split">700点の目安：リスニング 360 ＋ リーディング 340</p>
+  </div>
+
+  <div class="card apply" id="applyCard">
+    <div class="apply-head"><span class="apply-ico">✉</span><div><b id="applyTitle"></b><small id="applySub"></small></div></div>
     <ol class="timeline" id="toeicTimeline">
       <li data-date="2026-11-11T00:00:00+09:00"><i></i><div><b>11月11日</b>申込開始</div></li>
       <li data-date="2026-12-09T15:00:00+09:00"><i></i><div><b>12月9日 15:00</b>申込締切</div></li>
-      <li data-date="2027-01-24T00:00:00+09:00"><i></i><div><b>1月24日</b>試験日（目標 700点）</div></li>
+      <li data-date="2027-01-24T00:00:00+09:00"><i></i><div><b>1月24日</b>試験日</div></li>
     </ol>
-    <p class="toeic-next" id="toeicNext"></p>
     <a class="btn" href="https://www.iibc-global.org/toeic/test/lr/guide01/schedule.html" target="_blank" rel="noopener">公式の日程を見る ↗</a>
   </div>
 
-  <div class="section-title"><h2>将来目標</h2><span>最強の自分に掲げる旗</span></div>
-  <ul class="goal-grid">
-    <li class="goal-card" style="--c:var(--orange);--cl:var(--orange-l)"><span class="g-ico">A+</span><h3>TOEIC 900超え</h3><p>まずは700、その先へ</p></li>
-    <li class="goal-card" style="--c:var(--violet);--cl:#f3ecff"><span class="g-ico">◆</span><h3>資格をたくさん</h3><p>転職でも困らないほどに</p></li>
-    <li class="goal-card" style="--c:var(--pink);--cl:#ffe8ef"><span class="g-ico">♪</span><h3>ピアノとヴァイオリン</h3><p>上級者レベルまで</p></li>
-    <li class="goal-card" style="--c:#f5679e;--cl:#ffeef5"><span class="g-ico">✦</span><h3>今よりきれいに</h3><p>やせて、可愛くなって、モテたい</p></li>
-    <li class="goal-card wide" style="--c:var(--gold-d);--cl:var(--gold-l)"><span class="g-ico">♛</span><h3>誇れることを作る</h3><p>特別な人と知り合う。海外で特別なことをする</p></li>
-    <li class="goal-card wide" style="--c:var(--green-d);--cl:#e6f8ef"><span class="g-ico">90</span><h3>カラオケで毎回90点</h3><p>いつ歌っても、90点を超える</p></li>
-  </ul>
+  <div class="section-title"><h2>700点までの道のり</h2><span id="phaseNow"></span></div>
+  <ol class="phases" id="phases"></ol>
+
+  <div class="card toeic-stat">
+    <div><small>TOEICに積んだ時間</small><b id="toeicTime">0分</b></div>
+    <button class="btn small" type="button" id="addToeic">今日の道に TOEIC を足す</button>
+  </div>
+
+  <div class="section-title"><h2>将来目標</h2><span>旗ごとの、次の一歩</span></div>
+  <ul class="goal-list" id="goalList"></ul>
 </section>
 
 <!-- ============ 便り ============ -->
 <section class="view" id="view-news" data-view="news" hidden>
   <h1 class="view-title">便り</h1>
   <p class="view-sub" id="newsDate">ゲーム・エンタメ・イタリアとヨーロッパの文化</p>
+  <div class="read-meter card">
+    <div class="rm-text"><b id="readNum">0 / 0</b><span>今日読んだ便り</span></div>
+    <div class="rm-bar"><i id="readBar"></i></div>
+  </div>
   <div class="chips" id="newsFilter" role="tablist">
     <button type="button" class="on" data-cat="all">すべて</button>
     <button type="button" data-cat="game">ゲーム</button>
@@ -177,15 +184,37 @@
 <section class="view" id="view-me" data-view="me" hidden>
   <h1 class="view-title">わたし</h1>
 
-  <div class="card me-level">
-    <div class="me-rank" id="meRank"></div>
-    <div class="me-stats">
-      <div><b id="meStones">0</b><span>積んだ石</span></div>
-      <div><b id="meStreak">0</b><span>連続の日</span></div>
-      <div><b id="meWeek">0分</b><span>この7日の時間</span></div>
+  <div class="hero-card me-hero">
+    <svg class="me-hinata" viewBox="0 0 120 120" aria-hidden="true" id="meHinata"></svg>
+    <div class="me-head">
+      <span class="pill">天才レベル <b id="meLv">1</b></span>
+      <h2 id="meRank"></h2>
+      <div class="me-bar"><i id="meBar"></i></div>
+      <small id="meNext"></small>
     </div>
-    <div class="ranks" id="ranks"></div>
   </div>
+  <div class="me-stats">
+    <div style="--c:var(--violet-d)"><b id="meStones">0</b><span>積んだ石</span></div>
+    <div style="--c:var(--orange-d)"><b id="meStreak">0</b><span>連続の日</span></div>
+    <div style="--c:var(--orange-d)"><b id="meBest">0</b><span>最長の連続</span></div>
+    <div style="--c:var(--blue-d)"><b id="meTotal">0分</b><span>ぜんぶの時間</span></div>
+  </div>
+
+  <div class="section-title"><h2>称号バッジ</h2><span id="badgeCount"></span></div>
+  <ul class="badges" id="badges"></ul>
+
+  <div class="section-title"><h2>この5週間</h2><span>濃いほど、たくさん積んだ日</span></div>
+  <div class="card">
+    <div class="heat-head"><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span></div>
+    <div class="heatmap" id="heatmap"></div>
+    <div class="heat-legend"><span>少</span><i style="--o:.18"></i><i style="--o:.4"></i><i style="--o:.65"></i><i style="--o:1"></i><span>多</span></div>
+  </div>
+
+  <div class="section-title"><h2>何に積んだか</h2><span>これまでの時間</span></div>
+  <div class="card"><ul class="time-bars" id="timeBars"></ul></div>
+
+  <div class="section-title"><h2>天才レベルの段</h2></div>
+  <div class="card"><ol class="ranks" id="ranks"></ol></div>
 
   <div class="section-title"><h2>気分が上がること</h2><span>迷ったら、ここから1つ</span></div>
   <ul class="mood">
@@ -298,6 +327,15 @@
     <input id="addInput" type="text" maxlength="30" placeholder="自分で書く（例：英単語）" aria-label="一手の名前">
     <button class="btn" type="submit">足す</button>
   </form>
+</section>
+
+<section class="sheet" id="orderSheet" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
+  <div class="grab"></div>
+  <h3 id="orderTitle">今日の道の順番</h3>
+  <p class="sheet-note">▲▼ で入れ替えます。上にあるほど先に進みます。</p>
+  <ul class="order-list" id="orderList"></ul>
+  <label class="check-row"><input type="checkbox" id="orderTpl"><span>明日からも、この順番で始める</span></label>
+  <button class="btn" type="button" id="orderDone">できた</button>
 </section>
 
 <section class="sheet" id="templateSheet" role="dialog" aria-modal="true" aria-labelledby="tplTitle">

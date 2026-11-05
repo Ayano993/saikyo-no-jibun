@@ -90,6 +90,7 @@
     music: ['<b>{t}</b>、スタート！ 気合、入ってきた〜！'],
     musicOff: ['音楽ストップ！ 集中モードだね！'],
     zouzei: ['ZOUZEI PHONK、いってらっしゃい！ リピートにして戻ってきてね！'],
+    order: ['順番、決まった！ 上から順に、積んでいこう！'],
   };
   const pick1 = a => a[Math.floor(Math.random() * a.length)];
   const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => esc(v[k] ?? ''));
@@ -107,6 +108,7 @@
     return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
   const minutesJa = secs => {
+    if (secs < 1) return '0分';
     if (secs < 60) return `${Math.floor(secs)}秒`;
     const m = Math.round(secs / 60);
     return m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? m % 60 + '分' : ''}` : `${m}分`;
@@ -592,6 +594,44 @@
   $('#quickAdd').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) addTask(b.dataset.q); });
   $('#addForm').addEventListener('submit', e => { e.preventDefault(); addTask($('#addInput').value); });
 
+  // 並べかえ
+  const renderOrder = movedId => {
+    const ts = ensureDay(today).tasks;
+    $('#orderList').innerHTML = ts.map((t, i) => {
+      const p = planFor(t.label);
+      return `<li class="order-row${t.id === movedId ? ' moved' : ''}" data-id="${t.id}" style="${colorVars(p)}">
+        <span class="o-ico">${iconOf(p)}</span>
+        <b>${esc(t.label)}<small>${i + 1}番目${t.done ? '・できた' : ''}</small></b>
+        <button class="o-btn" type="button" data-dir="-1" aria-label="${esc(t.label)}を上へ"${i === 0 ? ' disabled' : ''}>▲</button>
+        <button class="o-btn" type="button" data-dir="1" aria-label="${esc(t.label)}を下へ"${i === ts.length - 1 ? ' disabled' : ''}>▼</button>
+      </li>`;
+    }).join('');
+  };
+  $('#orderBtn').addEventListener('click', () => { renderOrder(); $('#orderTpl').checked = false; openSheet($('#orderSheet')); sfx('tap'); });
+  $('#orderList').addEventListener('click', e => {
+    const b = e.target.closest('.o-btn');
+    if (!b) return;
+    const ts = ensureDay(today).tasks;
+    const id = b.closest('.order-row').dataset.id;
+    const i = ts.findIndex(t => t.id === id);
+    const j = i + +b.dataset.dir;
+    if (j < 0 || j >= ts.length) return;
+    [ts[i], ts[j]] = [ts[j], ts[i]];
+    save();
+    renderOrder(id);
+    sfx('tap');
+  });
+  $('#orderDone').addEventListener('click', () => {
+    if ($('#orderTpl').checked) {
+      const order = ensureDay(today).tasks.map(t => t.label);
+      state.template = [...order.filter(l => state.template.includes(l)), ...state.template.filter(l => !order.includes(l))];
+      save();
+    }
+    closeSheets();
+    renderToday();
+    say('order');
+  });
+
   // 余白の日
   $('#yohakuBtn').addEventListener('click', () => {
     const d = ensureDay(today);
@@ -650,7 +690,49 @@
   $('#sfxToggle').addEventListener('change', e => { window.Sound.setSfx(e.target.checked); sfx('check'); });
   $('#volRange').addEventListener('input', e => window.Sound.setVol(e.target.value / 100));
 
+  // ---------- 記録の集計 ----------
+  const timeByLabel = () => {
+    const m = {};
+    Object.entries(state.days).forEach(([iso, d]) => d.tasks.forEach(t => { m[t.label] = (m[t.label] || 0) + elapsedOf(t, iso); }));
+    return m;
+  };
+  const timeMatching = re => Object.entries(timeByLabel()).reduce((a, [k, v]) => a + (re.test(k) ? v : 0), 0);
+  const countLast7 = re => { let n = 0; for (let i = 0; i < 7; i++) { const d = state.days[addDays(today, -i)]; if (d && d.tasks.some(t => t.done && re.test(t.label))) n++; } return n; };
+  const bestStreak = () => {
+    const keys = Object.keys(state.days).sort();
+    if (!keys.length) return 0;
+    let best = 0, cur = 0, prev = null;
+    keys.forEach(k => {
+      if (dayStatus(k) === 'none') { cur = 0; prev = k; return; }
+      cur = prev && dayDiff(prev, k) === 1 && dayStatus(prev) !== 'none' ? cur + 1 : 1;
+      best = Math.max(best, cur); prev = k;
+    });
+    return best;
+  };
+
   // ---------- 挑戦 ----------
+  const PHASES = [
+    { title: '申し込んで、毎日少しずつ', from: '2026-11-05', to: '2026-11-30', items: ['11月11日になったら申し込む', 'Part 5 を毎日10問', '単語を毎日10個'] },
+    { title: '基礎を固める', from: '2026-12-01', to: '2026-12-27', items: ['12月9日 15:00 までに申込を済ませる', 'Part 5・6 を毎日20問', 'Part 2 を毎日10問'] },
+    { title: '本番形式で演習', from: '2026-12-28', to: '2027-01-17', items: ['模試を週1回（2時間通して）', '間違えたPartを集中して復習', 'Part 7 を毎日1セット'] },
+    { title: '直前の仕上げ', from: '2027-01-18', to: '2027-01-23', items: ['本番と同じ時間帯に模試を1回', '新しいことはしない', '前の日は早く寝る'] },
+    { title: '本番', from: '2027-01-24', to: '2027-01-24', items: ['いつもの朝ごはん', '受験票と写真付きの身分証', 'ここまで積んだ石を信じる'] },
+  ];
+  const md = iso => { const d = new Date(iso + 'T12:00:00+09:00'); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; };
+  const GOALS = [
+    { icon: 'A+', c: 'orange', title: 'TOEIC 900超え', sub: 'まずは700、その先へ', next: 'まず1月24日に700点。取れたら、次は800点を目標に',
+      stats: () => [`TOEIC 累計 ${minutesJa(timeMatching(/TOEIC/i))}`, `試験まで ${Math.max(0, dayDiff(today, '2027-01-24'))}日`] },
+    { icon: '◆', c: 'violet', title: '資格をたくさん', sub: '転職でも困らないほどに', next: '順番の案：TOEIC 700 → 英検準1級 → イタリア語の検定 → ワインエキスパート',
+      stats: () => ['いま挑戦中：TOEIC', `Duolingo 累計 ${minutesJa(timeMatching(/Duolingo/i))}`] },
+    { icon: '♪', c: 'pink', title: 'ピアノとヴァイオリン', sub: '上級者レベルまで', next: 'まずピアノで1曲を仕上げて、録音して残す',
+      stats: () => [`ピアノ 累計 ${minutesJa(timeMatching(/ピアノ/))}`, `この7日で ${countLast7(/ピアノ/)}日`] },
+    { icon: '✦', c: 'pink', title: '今よりきれいに', sub: 'やせて、可愛くなって、モテたい', next: 'ジムを週2回。行けた週は、今週の炎がもっと明るくなる',
+      stats: () => [`この7日のジム ${countLast7(/ジム/)}回`] },
+    { icon: '♛', c: 'gold', title: '誇れることを作る', sub: '特別な人と知り合う・海外で特別なことをする', next: 'ゲームを完成させて、誰かに遊んでもらう（いつかやりたい棚から）',
+      stats: () => [`パソコン 累計 ${minutesJa(timeMatching(/パソコン/))}`] },
+    { icon: '90', c: 'green', title: 'カラオケで毎回90点', sub: 'いつ歌っても、90点を超える', next: '十八番を1曲決めて、音程バーを見ながら練習する',
+      stats: () => [] },
+  ];
   const renderGoal = () => {
     const days = dayDiff(today, '2027-01-24');
     $('#toeicDays').textContent = days > 0 ? days : days === 0 ? '今日' : '済';
@@ -665,17 +747,51 @@
     });
     const open = new Date('2026-11-11T00:00:00+09:00').getTime();
     const close = new Date('2026-12-09T15:00:00+09:00').getTime();
-    let msg = '';
-    if (now < open) msg = `申込開始まで あと${dayDiff(today, '2026-11-11')}日。11月11日になったら申し込もう`;
-    else if (now < close) msg = `申込受付中。締切は12月9日 15:00（あと${Math.max(0, dayDiff(today, '2026-12-09'))}日）`;
-    else if (days > 0) msg = '申込期間は終わりました。あとは当日まで積むだけ';
-    $('#toeicNext').textContent = msg;
+    if (now < open) { $('#applyTitle').textContent = `申込開始まで あと${dayDiff(today, '2026-11-11')}日`; $('#applySub').textContent = '11月11日になったら、公式サイトから申し込もう'; }
+    else if (now < close) { $('#applyTitle').textContent = `申込受付中・締切まで あと${Math.max(0, dayDiff(today, '2026-12-09'))}日`; $('#applySub').textContent = '締切は12月9日 15:00'; }
+    else { $('#applyTitle').textContent = '申込期間は終わりました'; $('#applySub').textContent = 'あとは当日まで、積むだけ'; }
+    let nowIdx = PHASES.findIndex(p => today >= p.from && today <= p.to);
+    if (nowIdx < 0) nowIdx = today < PHASES[0].from ? 0 : PHASES.length;
+    $('#phaseNow').textContent = nowIdx < PHASES.length ? `いまは ${nowIdx + 1}つ目` : 'おつかれさま';
+    $('#phases').innerHTML = PHASES.map((p, i) => `
+      <li class="phase${i === nowIdx ? ' now' : i < nowIdx ? ' past' : ''}">
+        <span class="ph-no">${i < nowIdx ? '✓' : i + 1}</span>
+        <h3>${p.title}<small>${p.from === p.to ? md(p.from) : `${md(p.from)}〜${md(p.to)}`}</small></h3>
+        <ul>${p.items.map(x => `<li>${x}</li>`).join('')}</ul>
+      </li>`).join('');
+    $('#toeicTime').textContent = minutesJa(timeMatching(/TOEIC/i)).replace(/^(\d+)秒$/, '0分');
+    const has = ensureDay(today).tasks.some(t => /TOEIC/i.test(t.label));
+    $('#addToeic').textContent = has ? '今日の道へ行く' : '今日の道に TOEIC を足す';
+    $('#goalList').innerHTML = GOALS.map(g => {
+      const st = g.stats();
+      return `<li class="goal-item" style="--c:var(--${g.c});--cd:var(--${g.c}-d)">
+        <div class="gi-head"><span class="gi-ico">${g.icon}</span><div><h3>${g.title}</h3><p>${g.sub}</p></div></div>
+        <div class="gi-next"><b>次の一歩</b>${g.next}</div>
+        ${st.length ? `<div class="gi-stats">${st.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+      </li>`;
+    }).join('');
   };
+  $('#addToeic').addEventListener('click', () => {
+    const d = ensureDay(today);
+    if (!d.tasks.some(t => /TOEIC/i.test(t.label))) { d.tasks.push({ id: uid(), label: 'TOEIC', done: false, secs: 0 }); save(); go('today'); say('add', { t: 'TOEIC' }, true); }
+    else go('today');
+  });
 
   // ---------- 便り ----------
   const CAT = { game: 'ゲーム', ent: 'エンタメ', europe: 'ヨーロッパ' };
   const LANG = { it: 'イタリア語', en: '英語' };
   let newsFilter = 'all';
+  const READ_KEY = 'saikyo.read';
+  const readSet = () => { try { const r = JSON.parse(localStorage.getItem(READ_KEY)); return new Set(r && r.date === today ? r.links : []); } catch { return new Set(); } };
+  const markRead = link => { const s = readSet(); s.add(link); try { localStorage.setItem(READ_KEY, JSON.stringify({ date: today, links: [...s] })); } catch {} };
+  const renderReadMeter = () => {
+    const links = $$('.news-item a').map(a => a.getAttribute('href'));
+    const r = readSet();
+    const n = links.filter(l => r.has(l)).length;
+    $('#readNum').textContent = `${n} / ${links.length}`;
+    $('#readBar').style.width = links.length ? (n / links.length * 100) + '%' : '0';
+    $$('.news-item').forEach(li => li.classList.toggle('read', r.has(li.querySelector('a').getAttribute('href'))));
+  };
   const applyFilter = () => $$('.news-item').forEach(li => li.classList.toggle('hide', newsFilter !== 'all' && li.dataset.cat !== newsFilter));
   const renderNews = async () => {
     const ul = $('#newsList');
@@ -684,19 +800,30 @@
       if (!r.ok) throw new Error(r.status);
       const data = await r.json();
       $('#newsDate').textContent = `${fmtJa(data.date)}の便り${data.date !== today ? '（今朝の分は準備中）' : ''}・${data.items.length}本`;
-      ul.innerHTML = data.items.map(n => `
-        <li class="news-item" data-cat="${esc(n.cat)}">
-          <a href="${esc(n.link)}" target="_blank" rel="noopener">
+      ul.innerHTML = data.items.map((n, i) => {
+        const body = `
             <span class="news-meta"><span class="news-cat">${CAT[n.cat] || ''}</span><span>${esc(n.source)}</span>${LANG[n.lang] ? `<span class="news-lang">${LANG[n.lang]}</span>` : ''}</span>
             <p class="news-title">${esc(n.title)}</p>
             <p class="news-desc">${esc(n.desc || '')}</p>
-          </a>
-        </li>`).join('');
+            ${n.lang === 'it' ? '<p class="news-it-hint">イタリア語のまま、見出しだけ読んでみよう</p>' : ''}`;
+        return `
+        <li class="news-item${i === 0 ? ' feature' : ''}" data-cat="${esc(n.cat)}">
+          <a href="${esc(n.link)}" target="_blank" rel="noopener">${i === 0 ? `<div class="nf-band"></div><div class="nf-body">${body}</div>` : body}</a>
+        </li>`;
+      }).join('');
       applyFilter();
+      renderReadMeter();
     } catch {
       ul.innerHTML = '<li class="empty">いまは便りを取りに行けませんでした。電波のよいところで開き直してみてください</li>';
     }
   };
+  $('#newsList').addEventListener('click', e => {
+    const a = e.target.closest('.news-item a');
+    if (!a) return;
+    markRead(a.getAttribute('href'));
+    setTimeout(renderReadMeter, 300);
+    sfx('tap');
+  });
   $('#newsFilter').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -706,18 +833,76 @@
   });
 
   // ---------- わたし ----------
+  const BADGES = [
+    { ico: '一', c: 'orange', name: 'はじめの一手', how: '一手を1つ積む', ok: () => Object.values(state.days).some(d => d.tasks.some(t => t.done)) },
+    { ico: '★', c: 'gold', name: '有言実行', how: '今日の一手をやりきる', ok: () => Object.values(state.days).some(d => d.pick && d.tasks.some(t => t.done && t.id === d.pick)) },
+    { ico: '♜', c: 'violet', name: '城の完成', how: '1日の一手を全部やる', ok: () => Object.values(state.days).some(d => d.tasks.length > 1 && d.tasks.every(t => t.done)) },
+    { ico: '宝', c: 'gold', name: '宝箱ハンター', how: 'クエストを全部クリア', ok: () => Object.values(state.days).some(d => d.chest) },
+    { ico: '☾', c: 'pink', name: '余白も前進', how: '余白の日を使う', ok: () => Object.values(state.days).some(d => d.yohaku) },
+    { ico: '3', c: 'orange', name: '3日の炎', how: '3日続ける', ok: () => bestStreak() >= 3 },
+    { ico: '7', c: 'orange', name: '1週間の炎', how: '7日続ける', ok: () => bestStreak() >= 7 },
+    { ico: '30', c: 'orange', name: '1か月の炎', how: '30日続ける', ok: () => bestStreak() >= 30 },
+    { ico: '1h', c: 'blue', name: '1時間', how: '合計1時間 積む', ok: () => totalTime() >= 3600 },
+    { ico: '10h', c: 'blue', name: '10時間', how: '合計10時間 積む', ok: () => totalTime() >= 36000 },
+    { ico: '50h', c: 'blue', name: '50時間', how: '合計50時間 積む', ok: () => totalTime() >= 180000 },
+    { ico: '努', c: 'green', name: '努力家', how: '天才レベル2', ok: () => levelOf(totalStones()) >= 2 },
+    { ico: '秀', c: 'green', name: '秀才', how: '天才レベル3', ok: () => levelOf(totalStones()) >= 3 },
+    { ico: '天', c: 'violet', name: '天才', how: '天才レベル4', ok: () => levelOf(totalStones()) >= 4 },
+    { ico: '最', c: 'pink', name: '最強の自分', how: '天才レベル5', ok: () => levelOf(totalStones()) >= 5 },
+  ];
+  const totalTime = () => Object.keys(state.days).reduce((a, k) => a + daySecs(k), 0);
   const renderMe = () => {
     const st = totalStones();
     const lv = levelOf(st);
-    $('#meRank').innerHTML = `天才レベル ${lv}「${RANK[lv]}」<small>めざすは、最強の自分</small>`;
+    const h = $('#meHinata');
+    h.innerHTML = $('#hinataSvg').innerHTML;
+    h.querySelector('.eyes-normal').style.display = '';
+    h.querySelector('.eyes-wow').style.display = 'none';
+    $('#meLv').textContent = lv;
+    $('#meRank').textContent = RANK[lv];
+    const nx = LEVELS[lv + 1];
+    $('#meBar').style.width = nx ? ((st - LEVELS[lv]) / (nx - LEVELS[lv]) * 100) + '%' : '100%';
+    $('#meNext').textContent = nx ? `あと${nx - st}石で「${RANK[lv + 1]}」・めざすは最強の自分` : '最強の自分に、なった。';
     $('#meStones').textContent = st;
-    $('#meStreak').textContent = streakOf();
-    let w = 0; for (let i = 0; i < 7; i++) w += daySecs(addDays(today, -i));
-    $('#meWeek').textContent = minutesJa(w);
+    $('#meStreak').textContent = `${streakOf()}日`;
+    $('#meBest').textContent = `${bestStreak()}日`;
+    $('#meTotal').textContent = minutesJa(totalTime()).replace(/^(\d+)秒$/, '0分');
+
+    let seen = []; try { seen = JSON.parse(localStorage.getItem('saikyo.badges')) || []; } catch {}
+    const got = BADGES.filter(b => b.ok()).map(b => b.name);
+    $('#badgeCount').textContent = `${got.length} / ${BADGES.length}`;
+    $('#badges').innerHTML = BADGES.map(b => {
+      const ok = got.includes(b.name);
+      return `<li class="badge${ok ? '' : ' locked'}${ok && !seen.includes(b.name) ? ' new' : ''}" style="--c:var(--${b.c});--cd:var(--${b.c}-d)"><i>${ok ? b.ico : '?'}</i><b>${b.name}</b><small>${b.how}</small></li>`;
+    }).join('');
+    try { localStorage.setItem('saikyo.badges', JSON.stringify(got)); } catch {}
+
+    // この5週間（月曜はじまり、今週を最後の行に）
+    const mon = addDays(today, -((dow(today) + 6) % 7) - 28);
+    const vals = [];
+    for (let i = 0; i < 35; i++) { const iso = addDays(mon, i); vals.push([iso, state.days[iso] ? dayStones(state.days[iso]) : 0]); }
+    const max = Math.max(30, ...vals.map(v => v[1]));
+    $('#heatmap').innerHTML = vals.map(([iso, v]) => {
+      const fut = iso > today;
+      const rest = !fut && dayStatus(iso) === 'yohaku';
+      const o = v ? (.18 + .82 * v / max).toFixed(2) : 0;
+      const dnum = +iso.slice(8);
+      return `<div class="hm${fut ? ' future' : v && !rest ? ' on' : rest ? ' rest' : ''}${iso === today ? ' today' : ''}" style="--o:${o}" title="${fmtJa(iso)} +${v}石"><small>${dnum}</small></div>`;
+    }).join('');
+
+    // 何に積んだか
+    const tb = Object.entries(timeByLabel()).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const tmax = tb.length ? tb[0][1] : 1;
+    $('#timeBars').innerHTML = tb.length ? tb.map(([k, v]) => {
+      const p = planFor(k);
+      return `<li class="tb-row" style="--c:var(--${p.color})"><span class="tb-ico">${iconOf(p)}</span><div><div class="tb-top">${esc(k)}<span>${minutesJa(v)}</span></div><div class="tb-bar"><i style="width:${Math.max(4, v / tmax * 100)}%"></i></div></div></li>`;
+    }).join('') : '<li class="empty">タイマーで測ると、ここに積んだ時間が並びます</li>';
+
     $('#ranks').innerHTML = RANK.slice(1).map((name, i) => {
       const l = i + 1;
       return `<li class="rank-row${l <= lv ? ' got' : ''}${l === lv ? ' now' : ''}"><i>${l}</i><span>${name}</span><small>${LEVELS[l]}石</small></li>`;
     }).join('');
+
     const keys = Object.keys(state.days).filter(k => k < today).sort().reverse();
     $('#historyList').innerHTML = keys.length
       ? keys.slice(0, 60).map(k => {
